@@ -15,7 +15,7 @@ namespace ccscheck
     {
         public ZmwOutputFile (string dirname) : base(dirname, "zmws.csv")
         {
-            SW.WriteLine ("Movie,ZMW,SnrA,SnrC,SnrG,SnrT,Aligned,RQ,AvgZScore,ReadLength,NP,NumSuccess,NumZlow,NumABMis,NumOOM,NumOther,AlnLength,NumberErrors,NumIndel,NumSNP,Ref");
+            SW.WriteLine ("Movie,ZMW,SnrA,SnrC,SnrG,SnrT,Aligned,RQ,AvgZScore,ReadLength,NP,NumSuccess,NumZlow,NumABMis,NumOOM,NumOther,AlnLength,NumErrors,NumIndel,NumSNP,Ref");
         }
 
         #region implemented abstract members of CCSReadMetricsOutputter
