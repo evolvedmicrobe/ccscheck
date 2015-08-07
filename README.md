@@ -20,11 +20,11 @@ ccscheck will produce the following data files in the output folder specified wh
 
 ##Build requirements
 
-* POSIX 64bit little-endian system.
+* POSIX/64-bit/Little-Endian
 * git
 * C Compiler
 * C# Compiler with CLR available.
-
+* python
 
 **Stand alone binaries coming soon.**
 
@@ -33,6 +33,5 @@ ccscheck will produce the following data files in the output folder specified wh
 ```
     git clone https://github.com/evolvedmicrobe/ccscheck.git
     cd ccscheck
-    ./configure
-    make
+    ./build.sh
 ```

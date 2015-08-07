@@ -26,7 +26,10 @@ namespace ccscheck
                 if (args.Length > 3) {
                     Console.WriteLine ("Too many arguments");
                     DisplayHelp ();
-                } else if (args [0] == "h" || args [0] == "help" || args [0] == "?" || args [0] == "-h") {
+                } else if (args.Length < 2) {
+                    Console.WriteLine("Not enough arguments");
+                    DisplayHelp();
+                }else if (args [0] == "h" || args [0] == "help" || args [0] == "?" || args [0] == "-h") {
                     DisplayHelp ();
                 } else {
                     string bam_name = args [0];
@@ -41,9 +44,8 @@ namespace ccscheck
                         return;
                     }
                     if (Directory.Exists (out_dir)) {
-                        Console.WriteLine ("The output directory already exists, please specify a new directory or delete the old one");
-                        //TODO: Reinitialize this
-                        //return;
+                        Console.WriteLine ("The output directory already exists, please specify a new directory or delete the old one.");
+                        return;
                     }
 
                     Directory.CreateDirectory (out_dir);
