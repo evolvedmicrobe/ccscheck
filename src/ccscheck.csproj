@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{43D398A2-7BC2-493F-AB8F-8D73B454158C}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ccscheck</RootNamespace>
+    <AssemblyName>ccscheck</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <Commandlineparameters>/Users/nigel/git/cafe-quality/NotTracked/C++-Zscore/master_26bbfc4_snr2.bam ccscheck /Users/nigel/CCS_P6_C4/References.fna</Commandlineparameters>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Externalconsole>true</Externalconsole>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="Bio.BWA">
+      <HintPath>..\lib\Bio.BWA.dll</HintPath>
+    </Reference>
+    <Reference Include="Bio.Core">
+      <HintPath>..\lib\Bio.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Bio.Platform.Helpers">
+      <HintPath>..\lib\Bio.Platform.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="Bio.Desktop">
+      <HintPath>..\lib\Bio.Desktop.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Outputters\CCSReadMetricsOutputter.cs" />
+    <Compile Include="Outputters\QVCalibration.cs" />
+    <Compile Include="Outputters\SNROutputFile.cs" />
+    <Compile Include="Outputters\VariantOutputter.cs" />
+    <Compile Include="Outputters\ZmwOutputFile.cs" />
+    <Compile Include="Outputters\ZScoreOutputter.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <StandardHeader Text="using System;&#xA;using System.IO;&#xA;using System.Collections.Generic;&#xA;using System.Linq;&#xA;&#xA;using Bio;&#xA;using Bio.IO.PacBio;&#xA;using Bio.Variant;&#xA;using Bio.BWA;&#xA;using Bio.BWA.MEM;" IncludeInNewFiles="True" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="Outputters\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\lib\libbwacsharp.so">
+      <Link>libbwacsharp.so</Link>
+    </None>
+  </ItemGroup>
+</Project>
