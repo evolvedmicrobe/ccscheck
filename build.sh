@@ -3,6 +3,11 @@ rm -rf build; mkdir build
 cd build
 
 ### Build Bio dependency
+## Note this requires having mono with the PCL assemblies installed into:
+# MONO_PATH/lib/mono/xbuild-frameworks/
+# if they aren't there, you will likely have to copy over from a machine that has them
+# on Mac OSX they are located at the location below
+# /Library/Frameworks/Mono.framework/Versions/4.0.0/lib/mono/xbuild-frameworks
 git clone https://github.com/dotnetbio/bio.git
 cd bio
 nuget restore src/Bio.Mono.sln
