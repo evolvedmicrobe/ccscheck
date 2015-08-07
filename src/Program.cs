@@ -81,7 +81,7 @@ namespace ccscheck
                                         reads.Add(res);
                                 }
                                 catch(Exception thrown) {
-                                    Console.WriteLine("CCS READ FAIL: " + z.ID);
+                                    Console.WriteLine("CCS READ FAIL: " + z.Sequence.ID);
                                     Console.WriteLine(thrown.Message);
                                 }
                             });

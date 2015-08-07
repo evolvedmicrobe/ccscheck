@@ -26,7 +26,7 @@ namespace ccscheck
             string start = String.Join (",", read.Movie, read.HoleNumber.ToString (),
                                read.SnrA.ToString (), read.SnrC.ToString (), read.SnrG.ToString (),
                                read.SnrT.ToString (), aligned, read.ReadQuality.ToString (),
-                               read.AvgZscore.ToString (), read.Count.ToString (), read.NumPasses.ToString (),
+                               read.AvgZscore.ToString (), read.Sequence.Count.ToString (), read.NumPasses.ToString (),
                                read.ReadCountSuccessfullyAdded.ToString(), read.ReadCountBadZscore.ToString(), 
                                read.ReadCountAlphaBetaMismatch.ToString(),
                                read.ReadCountMemFail.ToString(), read.ReadCountOther.ToString());
