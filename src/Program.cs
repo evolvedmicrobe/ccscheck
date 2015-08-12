@@ -68,26 +68,34 @@ namespace ccscheck
                     var reads = new BlockingCollection<Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>>();
                     Task producer = Task.Factory.StartNew(() =>
                         {
-                            Parallel.ForEach(bamreader.Parse(bam_name), z => {
-                                try {
-                                        BWAPairwiseAlignment aln = null;
-                                        List<Variant> variants = null;
-                                        if (callVariants) {
-                                            aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
-                                            if (aln!=null) {
-                                                variants = VariantCaller.CallVariants(aln);
-                                                variants.ForEach( p => p.StartPosition += aln.AlignedSAMSequence.Pos);
+                            try 
+                            {
+                                Parallel.ForEach(bamreader.Parse(bam_name), z => {
+                                    try {
+                                            BWAPairwiseAlignment aln = null;
+                                            List<Variant> variants = null;
+                                            if (callVariants) {
+                                                aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
+                                                if (aln!=null) {
+                                                    variants = VariantCaller.CallVariants(aln);
+                                                    variants.ForEach( p => p.StartPosition += aln.AlignedSAMSequence.Pos);
+                                                }
                                             }
-                                        }
-                                        var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
-                                        reads.Add(res);
+                                            var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
+                                            reads.Add(res);
+                                    }
+                                    catch(Exception thrown) {
+                                        Console.WriteLine("CCS READ FAIL: " + z.Sequence.ID);
+                                        Console.WriteLine(thrown.Message);
+                                    } });
+                            } catch(Exception thrown) {
+                                Console.WriteLine("Could not parse BAM file: " + thrown.Message);
+                                while(thrown.InnerException!=null) {
+                                    Console.WriteLine(thrown.InnerException.Message);
+                                    thrown = thrown.InnerException;
                                 }
-                                catch(Exception thrown) {
-                                    Console.WriteLine("CCS READ FAIL: " + z.Sequence.ID);
-                                    Console.WriteLine(thrown.Message);
-                                }
-                            });
-                                    reads.CompleteAdding();
+                            }
+                            reads.CompleteAdding();
                         });                  
 
 
@@ -98,7 +106,7 @@ namespace ccscheck
                         }
                     }
 
-                    // throw any exceptions
+                    // throw any exceptions (this should be used after putting the consumer on a separate thread)
                     producer.Wait();
 
                     // Close the files
