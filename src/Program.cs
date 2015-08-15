@@ -48,7 +48,7 @@ namespace ccscheck
                     }
                     if (Directory.Exists (out_dir)) {
                         Console.WriteLine ("The output directory already exists, please specify a new directory or delete the old one.");
-                       // return;
+                        return;
                     }
 
                     Directory.CreateDirectory (out_dir);
@@ -64,14 +64,10 @@ namespace ccscheck
                     BWAPairwiseAligner bwa = null;
                     bool callVariants = ref_name != null;
                     if(callVariants) {
-                        bwa = new BWAPairwiseAligner(ref_name, true); 
+                        bwa = new BWAPairwiseAligner(ref_name, false); 
                     }
                     VariantFilter filter = args.Length > 3 ? new VariantFilter(args[3]) : null;
                     int excludedVariants = 0;
-
-                    var snp = new SNPVariant(110240837, 'a','c');
-                    snp.RefName = "12";
-                    Console.WriteLine(filter.ContainsVariantPosition(snp));
 
                     // Produce aligned reads with variants called in parallel.
                     var reads = new BlockingCollection<Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>>();
@@ -130,7 +126,6 @@ namespace ccscheck
 
                     // throw any exceptions (this should be used after putting the consumer on a separate thread)
                     producer.Wait();
-                    bwa.PrintRegionTree("/Users/nigel/git/cafe-quality/Invitae/coveredRegions.bed");
                     // Close the files
                     outputters.ForEach(z => z.Finish());
                     if(filter != null) {
