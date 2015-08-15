@@ -27,6 +27,15 @@ cp build/libbwacsharp.so ../
 cd ../
 rm -rf BWA-Sharp
 
+
+## Build VCF Parser dependency
+git clone https://github.com/evolvedmicrobe/Bio.VCF.git
+cd Bio.VCF
+xbuild /p:Configuration=Release Bio.VCF.sln
+cp bin/Release/* ../
+cd ../
+rm -rf Bio.VCF
+
 # Now make a bundled executable
 cd ..
 cp build/* lib/

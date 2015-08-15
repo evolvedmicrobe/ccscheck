@@ -15,7 +15,7 @@ if _platform == "linux" or _platform == "linux2":
 elif _platform == "darwin":
 	os.system("export PKG_CONFIG_PATH=/Users/nigel/mono64_4.0/lib/pkgconfig/")
 	# This will fail due to missing flags
-	cmd = "mkbundle --static  --deps -o ccscheck ccscheck.exe Bio.BWA.dll Bio.Core.dll Bio.Desktop.dll Bio.Platform.Helpers.dll"
+	cmd = "mkbundle --static --deps --machine-config /Users/nigel/mono64/etc/mono/4.5/machine.config -o ccscheck ccscheck.exe Bio.BWA.dll Bio.Core.dll Bio.Desktop.dll Bio.Platform.Helpers.dll Bio.VCF.dll"
 	os.system(cmd)
 	# so we add the flags back in and remake it, like all that corefoundation stuff
 	cmd = "cc -o ccscheck  -framework CoreFoundation -lobjc -liconv -Wall `pkg-config --cflags mono-2` temp.c  `pkg-config --libs-only-L mono-2` `pkg-config --variable=libdir mono-2`/libmono-2.0.a `pkg-config --libs-only-l mono-2 | sed -e \"s/\-lmono-2.0 //\"` temp.o"
