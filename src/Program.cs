@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Threading;
 
 using Bio;
 using Bio.IO.PacBio;
 using Bio.Variant;
 using Bio.BWA.MEM;
 using Bio.BWA;
+using Bio.Extensions;
 
 
 namespace ccscheck
@@ -23,7 +25,7 @@ namespace ccscheck
                 PlatformManager.Services.DefaultBufferSize = 4096;
                 PlatformManager.Services.Is64BitProcessType = true;
 
-                if (args.Length > 3) {
+                if (args.Length > 4) {
                     Console.WriteLine ("Too many arguments");
                     DisplayHelp ();
                 } else if (args.Length < 2) {
@@ -35,6 +37,7 @@ namespace ccscheck
                     string bam_name = args [0];
                     string out_dir = args [1];
                     string ref_name = args.Length > 2 ? args [2] : null;
+
                     if (!File.Exists(bam_name)) {
                         Console.WriteLine ("Can't find file: " + bam_name);
                         return;
@@ -45,7 +48,7 @@ namespace ccscheck
                     }
                     if (Directory.Exists (out_dir)) {
                         Console.WriteLine ("The output directory already exists, please specify a new directory or delete the old one.");
-                        return;
+                       // return;
                     }
 
                     Directory.CreateDirectory (out_dir);
@@ -61,8 +64,14 @@ namespace ccscheck
                     BWAPairwiseAligner bwa = null;
                     bool callVariants = ref_name != null;
                     if(callVariants) {
-                        bwa = new BWAPairwiseAligner(ref_name, false); 
+                        bwa = new BWAPairwiseAligner(ref_name, true); 
                     }
+                    VariantFilter filter = args.Length > 3 ? new VariantFilter(args[3]) : null;
+                    int excludedVariants = 0;
+
+                    var snp = new SNPVariant(110240837, 'a','c');
+                    snp.RefName = "12";
+                    Console.WriteLine(filter.ContainsVariantPosition(snp));
 
                     // Produce aligned reads with variants called in parallel.
                     var reads = new BlockingCollection<Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>>();
@@ -72,17 +81,30 @@ namespace ccscheck
                             {
                                 Parallel.ForEach(bamreader.Parse(bam_name), z => {
                                     try {
-                                            BWAPairwiseAlignment aln = null;
-                                            List<Variant> variants = null;
-                                            if (callVariants) {
-                                                aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
-                                                if (aln!=null) {
-                                                    variants = VariantCaller.CallVariants(aln);
-                                                    variants.ForEach( p => p.StartPosition += aln.AlignedSAMSequence.Pos);
+                                        BWAPairwiseAlignment aln = null;
+                                        List<Variant> variants = null;
+                                        if (callVariants) {
+                                            aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
+                                            if (aln!=null) {
+                                                variants = VariantCaller.CallVariants(aln);
+                                                variants.ForEach( p => {
+                                                    p.StartPosition += aln.AlignedSAMSequence.Pos;
+                                                    p.RefName = aln.Reference;
+                                                    });
+                                                // Filter out any crappy variants
+                                                if (filter != null && variants.Count > 0) {
+                                                    int startCount = variants.Count;
+                                                    variants = variants.Where(v => !filter.ContainsVariantPosition(v)).ToList();
+                                                    int endCount = variants.Count;
+                                                    if (endCount != startCount) {
+                                                        var dif = startCount - endCount;
+                                                        Interlocked.Add(ref excludedVariants, dif);
+                                                    }
                                                 }
                                             }
-                                            var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
-                                            reads.Add(res);
+                                        }
+                                        var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
+                                        reads.Add(res);
                                     }
                                     catch(Exception thrown) {
                                         Console.WriteLine("CCS READ FAIL: " + z.Sequence.ID);
@@ -108,10 +130,12 @@ namespace ccscheck
 
                     // throw any exceptions (this should be used after putting the consumer on a separate thread)
                     producer.Wait();
-
+                    bwa.PrintRegionTree("/Users/nigel/git/cafe-quality/Invitae/coveredRegions.bed");
                     // Close the files
                     outputters.ForEach(z => z.Finish());
-
+                    if(filter != null) {
+                        Console.WriteLine("Filtered out " + excludedVariants.ToString() +" variants based on VCF file");
+                    }
             }
             }
             catch(Exception thrown) {
@@ -130,6 +154,7 @@ namespace ccscheck
             Console.WriteLine ("INPUT - the input ccs.bam file");
             Console.WriteLine ("OUTDIR - directory to output results into");
             Console.WriteLine ("REF - A fasta file with the references (optional)");
+            Console.WriteLine ("VCF - A VCF file with variant positions to exclude (optional)");
         }                   
     }
 }

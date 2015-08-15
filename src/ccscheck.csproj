@@ -18,7 +18,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Commandlineparameters>/Users/nigel/git/cafe-quality/NotTracked/C++-Zscore/master_26bbfc4_snr2.bam ccscheck /Users/nigel/CCS_P6_C4/References.fna</Commandlineparameters>
+    <Commandlineparameters>/Users/nigel/git/cafe-quality/Invitae/all_z.bam /Users/nigel/git/pbccs/out /Users/nigel/BroadBundle/human_g1k_v37.fasta /Users/nigel/git/cafe-quality/Invitae/variants.vcf</Commandlineparameters>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
@@ -44,6 +44,9 @@
     <Reference Include="Bio.Desktop">
       <HintPath>..\lib\Bio.Desktop.dll</HintPath>
     </Reference>
+    <Reference Include="Bio.VCF">
+      <HintPath>..\lib\Bio.VCF.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -54,6 +57,7 @@
     <Compile Include="Outputters\VariantOutputter.cs" />
     <Compile Include="Outputters\ZmwOutputFile.cs" />
     <Compile Include="Outputters\ZScoreOutputter.cs" />
+    <Compile Include="VariantFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
