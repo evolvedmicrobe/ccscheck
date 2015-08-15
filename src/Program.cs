@@ -78,7 +78,10 @@ namespace ccscheck
                                                 aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
                                                 if (aln!=null) {
                                                     variants = VariantCaller.CallVariants(aln);
-                                                    variants.ForEach( p => p.StartPosition += aln.AlignedSAMSequence.Pos);
+                                                variants.ForEach( p => {
+                                                    p.StartPosition += aln.AlignedSAMSequence.Pos;
+                                                    p.RefName = aln.Reference;
+                                                });
                                                 }
                                             }
                                             var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
