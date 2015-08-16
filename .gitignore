@@ -4,6 +4,8 @@
 #build
 [Oo]bj/
 [Bb]in/
+build/*
+lib/*
 packages/
 TestResults/
 
