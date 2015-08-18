@@ -18,7 +18,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Commandlineparameters>/Users/nigel/git/cafe-quality/Invitae/all_z.bam /Users/nigel/git/pbccs/out /Users/nigel/BroadBundle/human_g1k_v37.fasta /Users/nigel/git/cafe-quality/Invitae/variants.vcf</Commandlineparameters>
+    <Commandlineparameters>/Users/nigel/pacbio/new_ccs_bench/coli/old /Users/nigel/pacbio/new_ccs_bench/coli/old/results /Users/nigel/pacbio/new_ccs_bench/coli/ecoliK12_pbi_March2013.fasta </Commandlineparameters>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
@@ -58,6 +58,7 @@
     <Compile Include="Outputters\ZmwOutputFile.cs" />
     <Compile Include="Outputters\ZScoreOutputter.cs" />
     <Compile Include="VariantFilter.cs" />
+    <Compile Include="CCSFastqParser.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -38,10 +38,18 @@ namespace ccscheck
                     string out_dir = args [1];
                     string ref_name = args.Length > 2 ? args [2] : null;
 
-                    if (!File.Exists(bam_name)) {
-                        Console.WriteLine ("Can't find file: " + bam_name);
+                    IEnumerable<PacBioCCSRead> reader;
+                    PacBioCCSBamReader bamreader = new PacBioCCSBamReader ();
+
+                    if(Directory.Exists(bam_name)) {
+                        reader = getReader(bam_name);
+                    } else if(File.Exists(bam_name)) {
+                        reader = bamreader.Parse(bam_name);
+                    } else {
+                        Console.WriteLine ("Can't find file or folder: " + bam_name);
                         return;
                     }
+
                     if (ref_name != null && !File.Exists (ref_name)) {
                         Console.WriteLine ("Can't find file: " + ref_name);
                         return;
@@ -60,10 +68,9 @@ namespace ccscheck
                         new SNROutputFile(out_dir),
                         new QVCalibration(out_dir)};
 
-                    PacBioCCSBamReader bamreader = new PacBioCCSBamReader ();
                     BWAPairwiseAligner bwa = null;
                     bool callVariants = ref_name != null;
-                    if(callVariants) {
+                    if (callVariants) {
                         bwa = new BWAPairwiseAligner(ref_name, false); 
                     }
                     VariantFilter filter = args.Length > 3 ? new VariantFilter(args[3]) : null;
@@ -75,7 +82,7 @@ namespace ccscheck
                         {
                             try 
                             {
-                                Parallel.ForEach(bamreader.Parse(bam_name), z => {
+                                Parallel.ForEach(reader, z => {
                                     try {
                                         BWAPairwiseAlignment aln = null;
                                         List<Variant> variants = null;
@@ -141,6 +148,15 @@ namespace ccscheck
                     Console.WriteLine ("Inner Exception: " + thrown.InnerException.Message);
                     thrown = thrown.InnerException;
                 }
+            }
+        }
+
+        static IEnumerable<PacBioCCSRead> getReader(string directoryName) {
+            var fastqs = Directory.EnumerateFiles (directoryName).Where (z => z.EndsWith (".fastq"));
+            foreach (var f in fastqs) {
+                foreach (var s in CCSFastqParser.Parse(f)) {
+                    yield return s;
+                }                
             }
         }
 
