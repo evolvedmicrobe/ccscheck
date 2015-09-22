@@ -32,7 +32,6 @@ namespace ccscheck
                                read.ReadCountMemFail.ToString(), read.ReadCountOther.ToString());
             if (aln == null) {
                 start = start + ",NA,NA,NA,NA,NA";
-                SW.WriteLine (start);
             } else {
                 var indels = variants.Count (z => z.Type == VariantType.INDEL);
                 var snps = variants.Count (z => z.Type == VariantType.SNP);
