@@ -8,7 +8,7 @@ from sys import platform as _platform
 
 if _platform == "linux" or _platform == "linux2":
 	os.system("export PKG_CONFIG_PATH=$HOME/mono64/lib/pkgconfig/")
-	cmd = "mkbundle --static  --deps -o ccscheck ccscheck.exe Bio.BWA.dll Bio.Core.dll Bio.Desktop.dll Bio.Platform.Helpers.dll"
+	cmd = "mkbundle --static  --deps -o ccscheck ccscheck.exe Bio.BWA.dll Bio.Core.dll Bio.Desktop.dll Bio.Platform.Helpers.dll Bio.VCF"
 	os.system(cmd)
 	pass
     # linux
