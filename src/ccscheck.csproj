@@ -18,7 +18,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <Commandlineparameters>/Users/nigel/git/cafe-quality/NotTracked/C++-Zscore/master_26bbfc4_snr2.bam ccscheck /Users/nigel/CCS_P6_C4/References.fna</Commandlineparameters>
+    <Commandlineparameters>/Users/nigel/pacbio/adamCML/adam.ccs.bam test /Users/nigel/pacbio/adamCML/BCR-ABL.fna</Commandlineparameters>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
@@ -27,8 +27,9 @@
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>false</ConsolePause>
+    <Commandlineparameters>/Users/nigel/pacbio/adamCML/adam.ccs.bam test93v2 /Users/nigel/pacbio/adamCML/BCR-ABL.fna</Commandlineparameters>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -54,6 +55,9 @@
     <Compile Include="Outputters\VariantOutputter.cs" />
     <Compile Include="Outputters\ZmwOutputFile.cs" />
     <Compile Include="Outputters\ZScoreOutputter.cs" />
+    <Compile Include="KnownSNP.cs" />
+    <Compile Include="KnownVariants.cs" />
+    <Compile Include="Outputters\KnownSNPOutputter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -26,7 +26,7 @@ namespace ccscheck
                 if (args.Length > 3) {
                     Console.WriteLine ("Too many arguments");
                     DisplayHelp ();
-                } else if (args.Length < 2) {
+                } else if (args.Length < 3) {
                     Console.WriteLine("Not enough arguments");
                     DisplayHelp();
                 }else if (args [0] == "h" || args [0] == "help" || args [0] == "?" || args [0] == "-h") {
@@ -34,7 +34,7 @@ namespace ccscheck
                 } else {
                     string bam_name = args [0];
                     string out_dir = args [1];
-                    string ref_name = args.Length > 2 ? args [2] : null;
+                    string ref_name = args [2];
                     if (!File.Exists(bam_name)) {
                         Console.WriteLine ("Can't find file: " + bam_name);
                         return;
@@ -45,7 +45,7 @@ namespace ccscheck
                     }
                     if (Directory.Exists (out_dir)) {
                         Console.WriteLine ("The output directory already exists, please specify a new directory or delete the old one.");
-                        return;
+                        //return;
                     }
 
                     Directory.CreateDirectory (out_dir);
@@ -58,12 +58,8 @@ namespace ccscheck
                         new QVCalibration(out_dir)};
 
                     PacBioCCSBamReader bamreader = new PacBioCCSBamReader ();
-                    BWAPairwiseAligner bwa = null;
-                    bool callVariants = ref_name != null;
-                    if(callVariants) {
-                        bwa = new BWAPairwiseAligner(ref_name, false); 
-                    }
-
+                    BWAPairwiseAligner bwa = new BWAPairwiseAligner(ref_name, false); 
+                    outputters.Add( new KnownSNPOutputter(out_dir, bwa));
                     // Produce aligned reads with variants called in parallel.
                     var reads = new BlockingCollection<Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>>();
                     Task producer = Task.Factory.StartNew(() =>
@@ -72,17 +68,19 @@ namespace ccscheck
                             {
                                 Parallel.ForEach(bamreader.Parse(bam_name), z => {
                                     try {
-                                            BWAPairwiseAlignment aln = null;
-                                            List<Variant> variants = null;
-                                            if (callVariants) {
-                                                aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
-                                                if (aln!=null) {
-                                                    variants = VariantCaller.CallVariants(aln);
+                                        BWAPairwiseAlignment aln = null;
+                                        List<Variant> variants = null;
+                                        // DateTime dt = DateTime.Now;
+                                        aln = bwa.AlignRead(z.Sequence) as BWAPairwiseAlignment;
+                                        // Console.WriteLine(dt.Subtract(DateTime.Now).TotalMilliseconds);
+                                            if (aln!=null) {
+                                                // Call Variants
+                                                variants = VariantCaller.CallVariants(aln);
                                                 variants.ForEach( p => {
-                                                    p.StartPosition += aln.AlignedSAMSequence.Pos;
-                                                    p.RefName = aln.Reference;
-                                                });
-                                                }
+                                                p.StartPosition += aln.AlignedSAMSequence.Pos;
+                                                p.RefName = aln.Reference;
+
+                                            });
                                             }
                                             var res = new Tuple<PacBioCCSRead, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
                                             reads.Add(res);
@@ -115,11 +113,12 @@ namespace ccscheck
                     // Close the files
                     outputters.ForEach(z => z.Finish());
 
+
             }
             }
             catch(Exception thrown) {
                 Console.WriteLine ("Error thrown when attempting to generate the CCS results");
-                Console.WriteLine ("Error: " + thrown.Message);
+                Console.WriteLine ( "Error: " + thrown.GetType().ToString() + " : "  + thrown.Message);
                 Console.WriteLine (thrown.StackTrace);
                 while (thrown.InnerException != null) {
                     Console.WriteLine ("Inner Exception: " + thrown.InnerException.Message);
