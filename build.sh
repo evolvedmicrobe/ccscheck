@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 rm -rf build; mkdir build
 cd build
 
 # Check for the platform first
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
         # ubuntu
-        export MONO_ROOT = $HOME/mono64/       
+        export MONO_ROOT=$HOME/mono64/       
 
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
