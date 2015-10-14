@@ -15,7 +15,7 @@ namespace ccscheck
     {
         public ZmwOutputFile (string dirname) : base(dirname, "zmws.csv")
         {
-            SW.WriteLine ("Movie,ZMW,SnrA,SnrC,SnrG,SnrT,Aligned,RQ,AvgZScore,ReadLength,NP,NumSuccess,NumZlow,NumABMis,NumOOM,NumOther,AlnLength,NumErrors,NumIndel,NumSNP,Ref");
+            SW.WriteLine ("Movie,ZMW,SnrA,SnrC,SnrG,SnrT,Aligned,RQ,AvgZScore,ReadLength,NP,NumSuccess,NumZlow,NumABMis,NumOther,AlnLength,NumErrors,NumIndel,NumSNP,Ref");
         }
 
         #region implemented abstract members of CCSReadMetricsOutputter
@@ -29,7 +29,7 @@ namespace ccscheck
                                read.AvgZscore.ToString (), read.Sequence.Count.ToString (), read.NumPasses.ToString (),
                                read.ReadCountSuccessfullyAdded.ToString(), read.ReadCountBadZscore.ToString(), 
                                read.ReadCountAlphaBetaMismatch.ToString(),
-                               read.ReadCountMemFail.ToString(), read.ReadCountOther.ToString());
+                read.ReadCountOther.ToString());
             if (aln == null) {
                 start = start + ",NA,NA,NA,NA,NA";
             } else {
