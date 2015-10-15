@@ -32,7 +32,6 @@ Are only available as betas right now but can be downloaded for:
 * git
 * C Compiler
 * C# Compiler with CLR available.
-* python
 
 
 ##Build instructions
