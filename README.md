@@ -22,7 +22,7 @@ This tool is an internal tool that we are making available for external users, b
 
 ##Stand alone binaries
 Are only available as betas right now but can be downloaded for:
-* [Mac OSX Yosemite](http://www.evolvedmicrobe.com/ccscheck/ccscheck_macosx.tar.gz)
+* [Mac OSX El Capitan](http://www.evolvedmicrobe.com/ccscheck/ccscheck_macosx.tar.gz)
 * [Ubuntu 14.04] (http://www.evolvedmicrobe.com/ccscheck/ccscheck.ubuntu14.tar.gz)
 
 
