@@ -27,8 +27,9 @@
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <ConsolePause>false</ConsolePause>
+    <Commandlineparameters>/Users/nigel/pacbio/NewChemTests/polished_80.fastq /Users/nigel/pacbio/NewChemTests/temp /Users/nigel/pacbio/new_ccs_bench/coli/ecoliK12_pbi_March2013.fasta</Commandlineparameters>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -53,11 +54,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Outputters\CCSReadMetricsOutputter.cs" />
     <Compile Include="Outputters\QVCalibration.cs" />
-    <Compile Include="Outputters\SNROutputFile.cs" />
     <Compile Include="Outputters\VariantOutputter.cs" />
-    <Compile Include="Outputters\ZmwOutputFile.cs" />
-    <Compile Include="Outputters\ZScoreOutputter.cs" />
-    <Compile Include="VariantFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

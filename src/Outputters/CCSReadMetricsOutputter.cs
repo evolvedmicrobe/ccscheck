@@ -19,7 +19,8 @@ namespace ccscheck
             fname = Path.Combine (dirname, fname);
             SW = new StreamWriter (fname);
         }
-        public abstract void ConsumeCCSRead(PacBioCCSRead read, BWAPairwiseAlignment aln, List<Variant> variants);
+        public abstract void ConsumeCCSRead(IQualitativeSequence read, BWAPairwiseAlignment aln, List<Variant> variants,
+            string treatmentName, string coverageLevel);
         public virtual void Finish() {
             SW.Close ();
         }

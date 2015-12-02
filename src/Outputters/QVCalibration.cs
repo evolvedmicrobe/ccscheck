@@ -19,7 +19,8 @@ namespace ccscheck
         long[] snpErrorCounts = new long[MAXQV];
         long[] deletionErrorCounts = new long[MAXQV];
         long[] insertionErrorCounts = new long[MAXQV];
-
+        string TreatmentName;
+        string CoverageLevel;
         public QVCalibration (string dirname):base(dirname, "qv_calibration.csv")
         {
             
@@ -27,12 +28,22 @@ namespace ccscheck
 
         #region implemented abstract members of CCSReadMetricsOutputter
 
-        public override void ConsumeCCSRead (PacBioCCSRead read, BWAPairwiseAlignment aln, List<Variant> variants)
+        public override void ConsumeCCSRead (IQualitativeSequence read, BWAPairwiseAlignment aln, List<Variant> variants,
+            string treatmentName, string coverageLevel)
         {
+            TreatmentName = treatmentName;
+            CoverageLevel = coverageLevel;
             if (variants == null) {
                 return;
             }
-            foreach (var v in variants) {                
+            var refseq = aln.AlignedRefSeq;
+            var qseq = aln.AlignedQuerySeq as QualitativeSequence;
+
+            foreach (var v in variants) {
+                // Ignore lower case bases
+                if (!VariantOutputter.VariantValid(v)) {
+                    continue;
+                }
                 incorrectCounts [v.QV]++;
                 if (v.Type == VariantType.SNP) {
                     snpErrorCounts [v.QV]++;
@@ -46,19 +57,19 @@ namespace ccscheck
                     }
                 }
             }
-            var refseq = aln.AlignedRefSeq;
-            var qseq = aln.AlignedQuerySeq as QualitativeSequence;
-            for (int i = 0; i < refseq.Count; i++) {
-                if (refseq [i] == qseq [i]) {
+           for (int i = 0; i < refseq.Count; i++) {
+                if (refseq [i] == qseq [i] && ((int)qseq[i]) < 95) {
                     correctCounts [qseq.GetQualityScore (i)]++;
                 }
             }            
         }
         public override void Finish ()
         {
-            SW.WriteLine ("QV,Correct,Incorrect,SNP,Deletion,Insertion");
+            SW.WriteLine ("Treatment,Coverage,QV,Correct,Incorrect,SNP,Deletion,Insertion");
             for (int i = 0; i < correctCounts.Length; i++) {
-                SW.WriteLine (String.Join (",", i.ToString (), 
+                SW.WriteLine (String.Join (",", TreatmentName,
+                    CoverageLevel,
+                    i.ToString (), 
                     correctCounts [i].ToString (), 
                     incorrectCounts [i].ToString (),
                     snpErrorCounts[i].ToString(),
