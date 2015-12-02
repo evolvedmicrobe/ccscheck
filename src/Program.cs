@@ -96,7 +96,7 @@ namespace ccscheck
                                         reads.Add(res);
                                     }
                                     catch(Exception thrown) {
-                                        Console.WriteLine("FASTQ READ FAIL: " + z.ID);
+                                        Console.WriteLine("FASTQ READ FAIL: " + fastq_name +"\nREAD=" + z.ID);
                                         Console.WriteLine(thrown.Message);
                                     } });
                             } catch(Exception thrown) {
