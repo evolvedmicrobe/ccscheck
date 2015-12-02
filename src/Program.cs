@@ -87,6 +87,7 @@ namespace ccscheck
                                                     p.StartPosition += aln.AlignedSAMSequence.Pos;
                                                     p.RefName = aln.Reference;
                                                     });
+
                                             }
                                         }
                                         var res = new Tuple<IQualitativeSequence, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
@@ -120,6 +121,15 @@ namespace ccscheck
                     outputters.ForEach(z => z.Finish());
 
             }
+            }
+            catch(DllNotFoundException thrown) {
+                Console.WriteLine ("Error thrown when attempting to generate the CCS results.");
+                Console.WriteLine("A shared library was not found.  To solve this, please add the folder" +
+                    " with the downloaded files libbwasharp and libMonoPosixHelper" +
+                    "to your environmental variables (LD_LIBRARY_PATH on Ubuntu, DYLD_LIBRARY_PATH on Mac OS X)."); 
+                Console.WriteLine ("Error: " + thrown.Message);
+                Console.WriteLine (thrown.StackTrace);
+
             }
             catch(Exception thrown) {
                 Console.WriteLine ("Error thrown when attempting to generate the CCS results");

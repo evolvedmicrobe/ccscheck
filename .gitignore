@@ -1,9 +1,12 @@
 #Autosave files
 *~
 
+
 #build
 [Oo]bj/
 [Bb]in/
+build/*
+lib/*
 packages/
 TestResults/
 
@@ -23,6 +26,8 @@ aclocal.m4
 install-sh
 autom4te.cache/
 *.user
+*.tar
+*.txt.safe
 *.tar.gz
 tarballs/
 test-results/

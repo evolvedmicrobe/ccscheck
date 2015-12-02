@@ -18,6 +18,14 @@ ccscheck will produce the following data files in the output folder specified wh
 | zmws       | A detailed description and associated statistics for each emitted ZMW.                             |
 | zscores    | Z-scores for each ZMW/subread combination.                                                         |
 
+This tool is an internal tool that we are making available for external users, but it is not officially supported by PacBio.
+
+##Stand alone binaries
+Are only available as betas right now but can be downloaded for:
+* [Mac OSX Yosemite](http://www.evolvedmicrobe.com/ccscheck/ccscheck_macosx.tar.gz)
+* [Ubuntu 14.04] (http://www.evolvedmicrobe.com/ccscheck/ccscheck.ubuntu14.tar.gz)
+
+
 ##Build requirements
 
 * POSIX/64-bit/Little-Endian
@@ -26,7 +34,6 @@ ccscheck will produce the following data files in the output folder specified wh
 * C# Compiler with CLR available.
 * python
 
-**Stand alone binaries coming soon.**
 
 ##Build instructions
 
