@@ -63,6 +63,8 @@ namespace ccscheck
                         new QVCalibration(out_dir)};
 
                     FastQParser fqp = new FastQParser();
+                    fqp.Alphabet = DnaAlphabet.Instance;
+                    fqp.FormatType = FastQFormatType.Sanger;
                     BWAPairwiseAligner bwa = null;
                     bool callVariants = ref_name != null;
                     if(callVariants) {
@@ -98,7 +100,7 @@ namespace ccscheck
                                         Console.WriteLine(thrown.Message);
                                     } });
                             } catch(Exception thrown) {
-                                Console.WriteLine("Could not parse FASTQ file: " + thrown.Message);
+                                Console.WriteLine("Could not parse FASTQ file: " + fastq_name + "\n" + thrown.Message);
                                 while(thrown.InnerException!=null) {
                                     Console.WriteLine(thrown.InnerException.Message);
                                     thrown = thrown.InnerException;
