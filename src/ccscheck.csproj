@@ -29,6 +29,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ConsolePause>false</ConsolePause>
     <Commandlineparameters>/Users/nigel/pacbio/NewChemTests/polished_80.fastq /Users/nigel/pacbio/NewChemTests/temp /Users/nigel/pacbio/new_ccs_bench/coli/ecoliK12_pbi_March2013.fasta</Commandlineparameters>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

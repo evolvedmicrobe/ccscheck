@@ -82,9 +82,32 @@ namespace ccscheck
                                         BWAPairwiseAlignment aln = null;
                                         List<Variant> variants = null;
                                         if (callVariants) {
-                                            aln = bwa.AlignRead(z) as BWAPairwiseAlignment;
+                                            // Save the lower case version, make a new upper case version for aligning and variant calling
+                                            var z2 = new Sequence(z.Alphabet, z.ConvertToString().ToUpper(), true);
+                                            aln = bwa.AlignRead(z2) as BWAPairwiseAlignment;
                                             if (aln!=null) {
+                                                var old_seq = aln.PairwiseAlignedSequences[0].SecondSequence as QualitativeSequence;
+                                                var old = old_seq.ConvertToString();
+                                                var cigars = Bio.IO.SAM.CigarUtils.GetCigarElements( aln.AlignedSAMSequence.CIGAR);
+                                                var read_pos = cigars.First().Operation == Bio.IO.SAM.CigarOperations.SOFT_CLIP ? cigars.First().Length : 0;
+                                             
+                                                var byte_new = new byte[old.Length];
+                                                var org = z.ConvertToString();
+                                                for(int i=read_pos; i < byte_new.Length; i++) {
+                                                    if(old[i] != '-') {
+                                                        byte_new[i] = (byte)((char)org[read_pos]).ToString().ToUpper()[0];
+                                                        read_pos++;
+                                                    } else {
+                                                        byte_new[i] = (byte)old[i];
+                                                    }
+                                                }
+                                                var newseq = new QualitativeSequence(old_seq.Alphabet, old_seq.FormatType, byte_new, old_seq.GetEncodedQualityScores(), true);
+                                                newseq.ID = old_seq.ID;
+                                                newseq.Metadata = old_seq.Metadata;
+                                                aln.PairwiseAlignedSequences[0].SecondSequence = newseq;
+
                                                 variants = VariantCaller.CallVariants(aln);
+
                                                 variants.ForEach( p => {
                                                     p.StartPosition += aln.AlignedSAMSequence.Pos;
                                                     p.RefName = aln.Reference;
@@ -96,12 +119,14 @@ namespace ccscheck
                                         reads.Add(res);
                                     }
                                     catch(Exception thrown) {
-                                        Console.WriteLine("FASTQ READ FAIL: " + fastq_name +"\nREAD=" + z.ID);
+                                        Console.WriteLine("READ FAILED: " + fastq_name +"\nREAD=" + z.ID);
                                         Console.WriteLine(thrown.Message);
                                     } });
                             } catch(Exception thrown) {
+                                Console.WriteLine(thrown.StackTrace);
                                 Console.WriteLine("Could not parse FASTQ file: " + fastq_name + "\n" + thrown.Message);
                                 while(thrown.InnerException!=null) {
+                                    Console.WriteLine(thrown.InnerException.StackTrace);
                                     Console.WriteLine(thrown.InnerException.Message);
                                     thrown = thrown.InnerException;
                                 }
@@ -136,7 +161,6 @@ namespace ccscheck
             catch(Exception thrown) {
                 Console.WriteLine ("Error thrown when attempting to generate the CCS results");
                 Console.WriteLine ("Error: " + thrown.Message);
-                Console.WriteLine (thrown.StackTrace);
                 while (thrown.InnerException != null) {
                     Console.WriteLine ("Inner Exception: " + thrown.InnerException.Message);
                     thrown = thrown.InnerException;
