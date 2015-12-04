@@ -8,6 +8,7 @@ using Bio.IO.PacBio;
 using Bio.Variant;
 using Bio.BWA;
 using Bio.BWA.MEM;
+using Bio.Algorithms.Alignment;
 
 namespace ccscheck
 {
@@ -28,7 +29,7 @@ namespace ccscheck
 
         #region implemented abstract members of CCSReadMetricsOutputter
 
-        public override void ConsumeCCSRead (IQualitativeSequence read, BWAPairwiseAlignment aln, List<Variant> variants,
+        public override void ConsumeCCSRead (IQualitativeSequence read, PairwiseAlignedSequence aln, List<Variant> variants,
             string treatmentName, string coverageLevel)
         {
             TreatmentName = treatmentName;
@@ -36,8 +37,8 @@ namespace ccscheck
             if (variants == null) {
                 return;
             }
-            var refseq = aln.AlignedRefSeq;
-            var qseq = aln.AlignedQuerySeq as QualitativeSequence;
+            var refseq = aln.FirstSequence;
+            var qseq = aln.SecondSequence as QualitativeSequence;
 
             foreach (var v in variants) {
                 // Ignore lower case bases

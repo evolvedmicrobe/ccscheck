@@ -13,6 +13,8 @@ using Bio.BWA.MEM;
 using Bio.IO.FastQ;
 using Bio.BWA;
 using Bio.Extensions;
+using Bio.Algorithms.MUMmer;
+using Bio.Algorithms.Alignment;
 
 
 namespace ccscheck
@@ -26,10 +28,10 @@ namespace ccscheck
                 PlatformManager.Services.DefaultBufferSize = 4096;
                 PlatformManager.Services.Is64BitProcessType = true;
 
-                if (args.Length > 4) {
+                if (args.Length > 3) {
                     Console.WriteLine ("Too many arguments");
                     DisplayHelp ();
-                } else if (args.Length < 2) {
+                } else if (args.Length < 3) {
                     Console.WriteLine("Not enough arguments");
                     DisplayHelp();
                 }else if (args [0] == "h" || args [0] == "help" || args [0] == "?" || args [0] == "-h") {
@@ -65,57 +67,87 @@ namespace ccscheck
                     FastQParser fqp = new FastQParser();
                     fqp.Alphabet = DnaAlphabet.Instance;
                     fqp.FormatType = FastQFormatType.Sanger;
-                    BWAPairwiseAligner bwa = null;
-                    bool callVariants = ref_name != null;
-                    if(callVariants) {
-                        bwa = new BWAPairwiseAligner(ref_name, false); 
-                    }
+                    MUMmerAligner mum = new MUMmerAligner();
+
+                    var fp = new Bio.IO.FastA.FastAParser();
+                    var refseq = fp.Parse(ref_name).First();
 
                     // Produce aligned reads with variants called in parallel.
-                    var reads = new BlockingCollection<Tuple<IQualitativeSequence, BWAPairwiseAlignment, List<Variant>>>();
+                    var reads = new BlockingCollection<Tuple<IQualitativeSequence, PairwiseAlignedSequence, List<Variant>>>();
                     Task producer = Task.Factory.StartNew(() =>
                         {
                             try 
                             {
                                 Parallel.ForEach(fqp.Parse(fastq_name), z => {
                                     try {
-                                        BWAPairwiseAlignment aln = null;
                                         List<Variant> variants = null;
-                                        if (callVariants) {
-                                            // Save the lower case version, make a new upper case version for aligning and variant calling
-                                            var z2 = new Sequence(z.Alphabet, z.ConvertToString().ToUpper(), true);
-                                            aln = bwa.AlignRead(z2) as BWAPairwiseAlignment;
-                                            if (aln!=null) {
-                                                var old_seq = aln.PairwiseAlignedSequences[0].SecondSequence as QualitativeSequence;
-                                                var old = old_seq.ConvertToString();
-                                                var cigars = Bio.IO.SAM.CigarUtils.GetCigarElements( aln.AlignedSAMSequence.CIGAR);
-                                                var read_pos = cigars.First().Operation == Bio.IO.SAM.CigarOperations.SOFT_CLIP ? cigars.First().Length : 0;
-                                             
-                                                var byte_new = new byte[old.Length];
-                                                var org = z.ConvertToString();
-                                                for(int i=read_pos; i < byte_new.Length; i++) {
-                                                    if(old[i] != '-') {
-                                                        byte_new[i] = (byte)((char)org[read_pos]).ToString().ToUpper()[0];
-                                                        read_pos++;
-                                                    } else {
-                                                        byte_new[i] = (byte)old[i];
+                                        // Save the lower case version, make a new upper case version for aligning and variant calling
+                                        var z2 = new Sequence(z.Alphabet, z.ConvertToString().ToUpper(), true);
+                                        z2.ID = z.ID;
+                                        var aln = mum.AlignSimple(refseq, new List<Sequence>() { z2}).First();
+                                        if (aln != null) {
+
+                                            // Now to add back in the quality scores and lowercase bases
+                                            var zasq = z as QualitativeSequence;
+                                            var old_seq = aln.PairwiseAlignedSequences[0].SecondSequence as Sequence;
+                                            var oss = old_seq.ConvertToString();
+                                            var cnt = oss.Replace("-","").Length;
+                                            if (cnt != zasq.Count) {
+                                               throw new Exception("Super evil!");
+                                            }
+                                            var new_ref = aln.PairwiseAlignedSequences[0].FirstSequence;                                                
+                                            byte[] qual_scores = new byte[old_seq.Count];
+                                            byte[] data = new byte[old_seq.Count];
+                                            int readPos =0;
+                                            for(int i = 0; i < oss.Length; i++)
+                                            {
+                                                byte newBase, qv;
+                                                var cur = oss[i];
+                                                if(cur != '-') {
+                                                    qv = (byte)zasq.GetQualityScore(readPos);
+                                                    newBase = zasq[readPos];
+                                                    readPos++;
+                                                    if (newBase > 95)
+                                                    {
+                                                        if (cur != new_ref[i]) {
+                                                            throw new Exception("Danger at the boundary!");
+                                                        }
+                                                    }
+                                                    if (cur != newBase && cur != (newBase - 32)) {
+                                                        for(int j = i-10; j < i+10; j++) 
+                                                        {
+                                                            Console.Write((char)oss[j]);
+                                                        }
+                                                        Console.Write("\n");
+                                                        for(int j = readPos-10; j < readPos+10; j++) 
+                                                        {
+                                                            Console.Write((char)zasq[j]);
+                                                        }                                                             
+                                                        throw new Exception("Indexing error, new and old are off!");
                                                     }
                                                 }
-                                                var newseq = new QualitativeSequence(old_seq.Alphabet, old_seq.FormatType, byte_new, old_seq.GetEncodedQualityScores(), true);
-                                                newseq.ID = old_seq.ID;
-                                                newseq.Metadata = old_seq.Metadata;
-                                                aln.PairwiseAlignedSequences[0].SecondSequence = newseq;
-
-                                                variants = VariantCaller.CallVariants(aln);
-
-                                                variants.ForEach( p => {
-                                                    p.StartPosition += aln.AlignedSAMSequence.Pos;
-                                                    p.RefName = aln.Reference;
-                                                    });
-
+                                                else {
+                                                    qv = 0;
+                                                    newBase = (byte)cur;
+                                                }
+                                                qual_scores[i] = (byte)(qv + 33);
+                                                data[i] = newBase;
                                             }
+                                            var Seq2 = new QualitativeSequence(DnaAlphabet.Instance, zasq.FormatType, old_seq.ToArray(), qual_scores, false);
+                                            Seq2.ID = zasq.ID;
+                                            aln.PairwiseAlignedSequences[0].SecondSequence = Seq2;
+                                            // Finish converting back
+
+
+
+                                            variants = VariantCaller.CallVariants(aln);
+
+                                            variants.ForEach( p => {
+                                                //p.StartPosition += aln.AlignedSAMSequence.Pos;
+                                                p.RefName = aln.FirstSequence.ID;
+                                                });
                                         }
-                                        var res = new Tuple<IQualitativeSequence, BWAPairwiseAlignment, List<Variant>>(z, aln, variants);
+                                        var res = new Tuple<IQualitativeSequence, PairwiseAlignedSequence, List<Variant>>(z, aln.PairwiseAlignedSequences.First(), variants);
                                         reads.Add(res);
                                     }
                                     catch(Exception thrown) {
