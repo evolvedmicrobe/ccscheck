@@ -21,7 +21,7 @@ namespace ccscheck
 
         static List<string> variants = new List<string> () {
             // The rest of these are in the file BCRData.txt, can be put online later
-            "Q351H",    "AGAAGAAAATCAGCCA[T/C]GGAGTACCTGGAGAAGAAAACACTCAGATCTCG",
+            "K103N",    "CACATCCAGTACTGTTACTGATTT[T/G]TTCTGTTTTAACCCTGCAGGATGTGGT",
 
         };
     }

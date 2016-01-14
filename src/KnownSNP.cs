@@ -14,7 +14,7 @@ namespace ccscheck
 {
     public class KnownSNP
     {
-        public const int MIN_QUAL_VALUE = 93;
+        public const int MIN_QUAL_VALUE = 45;
         public readonly string Name;
         public readonly string VariantString;
         public readonly char WT;
