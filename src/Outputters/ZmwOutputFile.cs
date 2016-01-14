@@ -29,7 +29,7 @@ namespace ccscheck
                                read.AvgZscore.ToString (), read.Sequence.Count.ToString (), read.NumPasses.ToString (),
                                read.ReadCountSuccessfullyAdded.ToString(), read.ReadCountBadZscore.ToString(), 
                                read.ReadCountAlphaBetaMismatch.ToString(),
-                               read.ReadCountMemFail.ToString(), read.ReadCountOther.ToString());
+                               read.ReadCountOther.ToString(), read.ReadCountOther.ToString());
             if (aln == null) {
                 start = start + ",NA,NA,NA,NA,NA";
             } else {
