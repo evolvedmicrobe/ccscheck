@@ -23,8 +23,10 @@ namespace ccscheck
         public override void ConsumeCCSRead (PacBioCCSRead read, BWAPairwiseAlignment aln, List<Variant> variants)
         {
             var aligned = aln==null ? "FALSE" : "TRUE";
-            var end = String.Join (",", read.MutationsTested.ToString (), read.MutationsApplied.ToString (), read.MutationsApplied.ToString (),
-                read.ProcessingTimeMS.ToString (), read.Barcode1.ToString(), read.Barcode2.ToString ());
+            var end = String.Join (",", read.MutationsTested.ToString (), read.MutationsApplied.ToString (),
+                                    read.ProcessingTimeMS.ToString (), read.Barcode1.ToString(), 
+                                    read.Barcode2.ToString ());
+            
             string start = String.Join (",", read.Movie, read.HoleNumber.ToString (),
                                read.SnrA.ToString (), read.SnrC.ToString (), read.SnrG.ToString (),
                                read.SnrT.ToString (), aligned, read.ReadQuality.ToString (),
