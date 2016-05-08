@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 
 using Bio;
+using Bio.IO;
 using Bio.IO.PacBio;
 using Bio.Variant;
 using Bio.BWA.MEM;
@@ -57,7 +58,12 @@ namespace ccscheck
                         new SNROutputFile(out_dir),
                         new QVCalibration(out_dir)};
 
-                    PacBioCCSBamReader bamreader = new PacBioCCSBamReader ();
+                    ISequenceParser reader;
+                    if (bam_name.EndsWith (".fastq", StringComparison.OrdinalIgnoreCase)) {
+                        reader = new FastQCCSReader ();
+                    } else {
+                        reader = new PacBioCCSBamReader ();
+                    }
                     BWAPairwiseAligner bwa = null;
                     bool callVariants = ref_name != null;
                     if(callVariants) {
@@ -70,7 +76,8 @@ namespace ccscheck
                         {
                             try 
                             {
-                                Parallel.ForEach(bamreader.Parse(bam_name), z => {
+                                Parallel.ForEach(reader.Parse(bam_name), y => {
+                                    var z = y as PacBioCCSRead;
                                     try {
                                             BWAPairwiseAlignment aln = null;
                                             List<Variant> variants = null;

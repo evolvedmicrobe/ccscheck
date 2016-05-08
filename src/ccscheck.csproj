@@ -29,6 +29,7 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <Commandlineparameters>/Users/nigel/pacbio/BRCA/G06_1/m151230_124031_42180_c100905892550000001823204104301636_s1_p0.1.ccs.fastq /Users/nigel/pacbio/BRCA/G06_1/results/ /Users/nigel/BroadBundle/human_g1k_v37.fasta</Commandlineparameters>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -54,6 +55,7 @@
     <Compile Include="Outputters\VariantOutputter.cs" />
     <Compile Include="Outputters\ZmwOutputFile.cs" />
     <Compile Include="Outputters\ZScoreOutputter.cs" />
+    <Compile Include="FastQCCSReader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
