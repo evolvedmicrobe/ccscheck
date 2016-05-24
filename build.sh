@@ -1,4 +1,5 @@
 #!/bin/bash
+rm -rf lib
 rm -rf build; mkdir build
 cd build
 
@@ -9,7 +10,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
 
 elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
-        export MONO_ROOT=/Users/nigel/mono64_4.0       
+        export MONO_ROOT=/Users/nigel/mono64_4.2.1/       
 else
 	echo "You can't build the release versions here!"
         # Unknown.
