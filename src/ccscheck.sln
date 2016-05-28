@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ccscheck", "ccscheck.csproj", "{43D398A2-7BC2-493F-AB8F-8D73B454158C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ccscheck", "ccscheck\ccscheck.csproj", "{43D398A2-7BC2-493F-AB8F-8D73B454158C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbeddedCCSCheck", "EmbeddedCCSCheck\EmbeddedCCSCheck.csproj", "{F7E14762-D61B-4A39-AA63-B1C10D031957}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,5 +15,9 @@ Global
 		{43D398A2-7BC2-493F-AB8F-8D73B454158C}.Debug|x86.Build.0 = Debug|x86
 		{43D398A2-7BC2-493F-AB8F-8D73B454158C}.Release|x86.ActiveCfg = Release|x86
 		{43D398A2-7BC2-493F-AB8F-8D73B454158C}.Release|x86.Build.0 = Release|x86
+		{F7E14762-D61B-4A39-AA63-B1C10D031957}.Debug|x86.ActiveCfg = Debug|x86
+		{F7E14762-D61B-4A39-AA63-B1C10D031957}.Debug|x86.Build.0 = Debug|x86
+		{F7E14762-D61B-4A39-AA63-B1C10D031957}.Release|x86.ActiveCfg = Release|x86
+		{F7E14762-D61B-4A39-AA63-B1C10D031957}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
