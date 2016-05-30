@@ -67,12 +67,12 @@ namespace EmbeddedCCSCheck
         public static void SetReferenceFasta(string fastaFile) {
             aligner = new BWAPairwiseAligner (fastaFile, false, false);
         }
-        public static byte[] Align (string seq)
+        public static void Align (string seq)
         {
             var read = new Sequence(DnaAlphabet.Instance, seq);
             var result = aligner.AlignRead (read) as BWAPairwiseAlignment;
             if (result == null) {
-                return null;
+                return;
             } else {
                 var alnv = VariantCaller.LeftAlignIndelsAndCallVariants(result);
                 var variants = alnv.Item2;
@@ -93,21 +93,20 @@ namespace EmbeddedCCSCheck
                         seqpairs.SecondSequence = result.AlignedRefSeq;
                     }
                     pairwise.Add (seqpairs);
-                    var variantsInQueryCoordidantes = VariantCaller.CallVariants(pairwise);
+                    var variantsInQueryCoordinates = VariantCaller.CallVariants(pairwise);
                     var se = GetQueryStartAndEndPadding(result.AlignedSAMSequence);
                     var offset = result.OriginallyReverseComplemented ? se.Item2 : se.Item1;
-                    variantsInQueryCoordidantes.ForEach (v => v.StartPosition += offset);
+                    variantsInQueryCoordinates.ForEach (v => v.StartPosition += offset);
                     variants.ForEach (p => {
                         p.StartPosition += result.AlignedSAMSequence.Pos;
                         p.RefName = result.Reference;
                     });
-                    var results = Enumerable.Zip (variants, variantsInQueryCoordidantes, (x, y) => new VariantInfo (x, y)).ToList(); 
-                    Console.WriteLine (results.Count);
-                }
+                    var results = Enumerable.Zip (variants, variantsInQueryCoordinates, (x, y) => new VariantInfo (x, y)).ToList(); 
 
-                //result.
-                //result.AlignedSAMSequence.
-                return null;    
+                    foreach (var v in variantsInQueryCoordinates) {
+                        VariantScorer.Score (IntPtr.Zero, v, 10);
+                    }
+                } 
             }
         }
         static Tuple<int, int> GetQueryStartAndEndPadding(SAMAlignedSequence seq) {

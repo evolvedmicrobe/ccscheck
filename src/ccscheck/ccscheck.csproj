@@ -34,16 +34,16 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Bio.BWA">
-      <HintPath>..\lib\Bio.BWA.dll</HintPath>
+      <HintPath>..\..\lib\Bio.BWA.dll</HintPath>
     </Reference>
     <Reference Include="Bio.Core">
-      <HintPath>..\lib\Bio.Core.dll</HintPath>
+      <HintPath>..\..\lib\Bio.Core.dll</HintPath>
     </Reference>
     <Reference Include="Bio.Platform.Helpers">
-      <HintPath>..\lib\Bio.Platform.Helpers.dll</HintPath>
+      <HintPath>..\..\lib\Bio.Platform.Helpers.dll</HintPath>
     </Reference>
     <Reference Include="Bio.Desktop">
-      <HintPath>..\lib\Bio.Desktop.dll</HintPath>
+      <HintPath>..\..\lib\Bio.Desktop.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -69,10 +69,5 @@
   </ProjectExtensions>
   <ItemGroup>
     <Folder Include="Outputters\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\lib\libbwacsharp.so">
-      <Link>libbwacsharp.so</Link>
-    </None>
   </ItemGroup>
 </Project>
