@@ -21,8 +21,8 @@ namespace EmbeddedCCSCheck
             PlatformManager.Services.MaxSequenceSize = int.MaxValue;
             PlatformManager.Services.DefaultBufferSize = 4096;
             PlatformManager.Services.Is64BitProcessType = true;
-            EmbeddedCCSCheck.Aligner.SetReferenceFasta ("/Users/nigel/BroadBundle/human_g1k_v37.fasta");
-            EmbeddedCCSCheck.Aligner.Align("gatgggaccttgtgCCCgaagaagaggtgccaggaaGatgtctggCaagggga");
+            //EmbeddedCCSCheck.Aligner.SetReferenceFastaAndOutputFile ("/Users/nigel/BroadBundle/human_g1k_v37.fasta", "tmp.txt");
+            //EmbeddedCCSCheck.Aligner.Align("gatgggCCAaccttgtggaagTagaggtgccagCAaatagtctgggaagggga", IntPtr.Zero, "ASDFA" , 5464L, 25);
         }
     }
 }

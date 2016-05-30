@@ -19,7 +19,8 @@ void error(std::string msg) {
 MonoDomain* mDomain;
 MonoClass* mAligner;
 MonoMethod* mAlign;
-MonoMethod* mSetReferenceFasta;
+MonoMethod* mSetReferenceFastaAndOutputFile;
+MonoMethod* mCloseFileStream;
 MonoAssembly* mAssembly;
 MonoImage* mImage;
 
@@ -31,56 +32,80 @@ void create_mono_runtime() {
 
 	mAssembly = mono_domain_assembly_open (mDomain, filename);
 	if (!mAssembly) {
-		error("Mono assembly seems to be NULL??");
+		error("Mono assembly seems to be NULL.");
 		return;
 	}
 	mImage = mono_assembly_get_image (mAssembly);
 	if (!mImage) {
-		error("Mono image seems to be NULL??");
+		error("Mono image seems to be NULL.");
 		return;
 	}
 	mono_jit_exec (mDomain, mAssembly, 1, &filename);
 	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "Aligner");
-	mAlign = mono_class_get_method_from_name(mAligner, "Align", 1);
-	mSetReferenceFasta = mono_class_get_method_from_name(mAligner, "SetReferenceFasta", 1);
+	mAlign = mono_class_get_method_from_name(mAligner, "Align", 5);
+	mCloseFileStream = mono_class_get_method_from_name(mAligner, "CloseFileStream", 0);	
+	mSetReferenceFastaAndOutputFile = mono_class_get_method_from_name(mAligner, "SetReferenceFastaAndOutputFile", 2);
 }
 
-void
-VariantCaller::CreateVariantCaller(std::string fastaFile) {
-	const char* local_str = fastaFile.c_str();
-	void* args[1];
+namespace PacBio {
+namespace Variant {
+
+
+VariantCaller::VariantCaller(std::string fastaFile, std::string outputFile) {
+	if (mDomain != NULL) {
+		error("Mono domain already created but tried to reinitialize.");
+	}
+	create_mono_runtime();
+	const char* loc_fasta_str = fastaFile.c_str();
+	const char* loc_output_str = outputFile.c_str();
+	void* args[2];
 	MonoObject* exception;
-	args[0] = mono_string_new(mDomain, local_str);
-	mono_runtime_invoke(mSetReferenceFasta, NULL, args, &exception);
+	args[0] = mono_string_new(mDomain, loc_fasta_str);	
+	args[1] = mono_string_new(mDomain, loc_output_str);
+	mono_runtime_invoke(mSetReferenceFastaAndOutputFile, NULL, args, &exception);
 	if(exception){
 		mono_print_unhandled_exception (exception);
-		error("C# Based Error");
+		error("Error initializing the aligner and output files.");
 	}
 }
 
-void
-VariantCaller::DestroyVariantCaller() {
+
+VariantCaller::~VariantCaller() {
+	MonoObject* exception;
+	mono_runtime_invoke(mCloseFileStream, NULL, NULL, &exception);
+		if(exception){
+		mono_print_unhandled_exception (exception);
+		error("Could not close file handle.");
+	}
 	mono_jit_cleanup (mDomain);
 }
 
 void
-VariantCaller::CallVariants(std::string str) {
+VariantCaller::CallCCSVariants(std::string str) {
 	// Very unclear about this business
 	mono_thread_attach (mDomain);
-	void* args[1];
+	void* args[5];
 	MonoObject* exception;
 	const char* local_str = str.c_str();
-	args[0] = mono_string_new(mDomain, local_str);
+	long ZMW = 25L;
+
+	args[0] = mono_string_new(mDomain, local_str); // Sequence
+	args[1] = &ZMW; // Pointer to abstract integrator
+	args[2] = mono_string_new(mDomain, local_str); // Movie Name
+	args[3] = &ZMW; // ZMW
+	args[4] = &ZMW; // NumReads = both scorable and not.
+	std::cout << "So far so good" << std::endl;
 	mono_runtime_invoke(mAlign, NULL, args, &exception);
 	if(exception){
 		mono_print_unhandled_exception (exception);
-		error("C# Based Error");
+		error("Error in managed code base when calling variants.");
 	}
-
 }
+} // namespace Consensus
+} // namespace PacBio
 
-// Functions to make it possible for C++ code to score
-// the variants found.
+
+// Functions available for PInvoke by C# code.
 extern "C" {
 
 	void ScoreVariant(void* ai, int pos, int type, char* bases, double* outputArray) {
@@ -95,12 +120,17 @@ extern "C" {
 		outputArray[1] = 3.0;
 		}
 
+	void GetBaseLineLikelihoods(void* ai, double* outputArray) {
+		for(int i=0; i < 10; i++) {
+			outputArray[i] = (double)i;
+		}
+	}
 }
 
 
 int main() {
-	create_mono_runtime();
-	VariantCaller::CreateVariantCaller("/Users/nigel/BroadBundle/human_g1k_v37.fasta");
-	VariantCaller::CallVariants("gatgggaccttgtggaagaagaggtgccaggaatatgtctgggaagggga");
+	using namespace PacBio::Variant;
+	VariantCaller vc("/Users/nigel/pacbio/AllReferences.fna", "tmp.txt");
+	vc.CallCCSVariants("TGATGATATTGAACAGGAAGGCTCTCCCGACGTTCCGGGTGACAAGCGTATTGAAGGCTC");
 
 }

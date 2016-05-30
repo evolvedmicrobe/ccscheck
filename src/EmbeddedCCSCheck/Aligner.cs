@@ -18,57 +18,30 @@ using Bio.Algorithms.Alignment;
 
 namespace EmbeddedCCSCheck
 {
-    public enum EventType : int { SNP=0, Insertion=1, Deletion=2};
-
-    public class VariantInfo {
-        public string RefVariantDescription;
-        public EventType Type;
-        public Variant TemplateMutation;
-        public VariantInfo(Variant refCall, Variant queryCall) {            
-            // Load up all the important information about the reference variant.
-            var refVariantDescription = new StringBuilder (20);
-            refVariantDescription.Append (refCall.RefName);
-            refVariantDescription.Append (':');
-            refVariantDescription.Append (refCall.StartPosition);
-            refVariantDescription.Append (':');
-            if (refCall.Type == VariantType.SNP) {
-                var snp = refCall as SNPVariant;
-                refVariantDescription.Append ("S:" + snp.AltBP.ToString());
-            } else if (refCall.Type == VariantType.INDEL) {
-                var indel = refCall as IndelVariant;
-                if (indel.InsertionOrDeletion == IndelType.Insertion) {
-                    refVariantDescription.Append ("I" + indel.InsertedOrDeletedBases.Length + ":" + indel.InsertedOrDeletedBases);
-                } else if (indel.InsertionOrDeletion == IndelType.Deletion) {
-                    refVariantDescription.Append ("D" + indel.InsertedOrDeletedBases.Length + ":" + indel.InsertedOrDeletedBases);
-                } else {
-                    throw new Exception ("Complex types not allowed");
-                }
-            } else {
-                throw new Exception ("Complex variants not allowed");
-            }
-            this.RefVariantDescription = refVariantDescription.ToString ();
-
-            // Now the ever important variant information
-            this.TemplateMutation = queryCall;
-        }
-
-      
-    }
-
 
     public static class Aligner
     {
-        public static VariantInfo CreateVariantInfoFromVariant(Variant v, int qStart, bool orgRevComp, SAMAlignedSequence seq) {
-
-            return null;
-        }
+        static StreamWriter SW;
         static BWAPairwiseAligner aligner;
 
-        public static void SetReferenceFasta(string fastaFile) {
+        public static void SetReferenceFastaAndOutputFile(string fastaFile, string outFile) {
             aligner = new BWAPairwiseAligner (fastaFile, false, false);
+            SW = new StreamWriter (outFile);
+            SW.WriteLine (CCSVariantOutputter.GetHeader ());
         }
-        public static void Align (string seq)
+
+
+        public static void CloseFileStream() {
+            SW.Close ();
+        }
+
+
+        public static void Align (string seq, IntPtr ai, string movie, long zmw, int nreads)
         {
+            try {
+            if (SW == null || aligner == null) {
+                throw new InvalidProgramException ("Tried to align read before calling variants");
+            }
             var read = new Sequence(DnaAlphabet.Instance, seq);
             var result = aligner.AlignRead (read) as BWAPairwiseAlignment;
             if (result == null) {
@@ -77,6 +50,7 @@ namespace EmbeddedCCSCheck
                 var alnv = VariantCaller.LeftAlignIndelsAndCallVariants(result);
                 var variants = alnv.Item2;
                 var aln = alnv.Item1;
+
                 // Super annoying, I need to get back the query positions of this stuff 
                 // to test everything, which is information I specifically discarded before
                 if (variants.Count > 0) {
@@ -101,14 +75,29 @@ namespace EmbeddedCCSCheck
                         p.StartPosition += result.AlignedSAMSequence.Pos;
                         p.RefName = result.Reference;
                     });
-                    var results = Enumerable.Zip (variants, variantsInQueryCoordinates, (x, y) => new VariantInfo (x, y)).ToList(); 
+                    if (variantsInQueryCoordinates.Count != variants.Count) {
+                        throw new Exception ("Variants in one direction did not match variants in the other");
+                    }
 
-                    foreach (var v in variantsInQueryCoordinates) {
-                        VariantScorer.Score (IntPtr.Zero, v, 10);
+                    double[] baseLL = VariantScorer.GetBaselineLL (ai, nreads);
+
+                    // Now to pair them up
+
+                    for(int i = 0; i < variants.Count; i++) {
+                        var refV = variants [i];
+                        var queryV = variantsInQueryCoordinates [i];
+                        var scores = VariantScorer.Score (ai, queryV, nreads);
+                        CCSVariantOutputter.OutputVariants(refV, movie, zmw.ToString(), baseLL, scores, SW);
                     }
                 } 
             }
+            } catch(Exception thrown) {
+                Console.Write (thrown.StackTrace);
+            }
         }
+
+
+
         static Tuple<int, int> GetQueryStartAndEndPadding(SAMAlignedSequence seq) {
            
             var cigar = CigarUtils.GetCigarElements (seq.CIGAR);
@@ -135,8 +124,40 @@ namespace EmbeddedCCSCheck
             return start;
 
         }
+        public enum EventType : int { SNP=0, Insertion=1, Deletion=2};
 
-        
+        public class VariantInfo {
+            public string RefVariantDescription;
+            public EventType Type;
+            public Variant TemplateMutation;
+            public VariantInfo(Variant refCall, Variant queryCall) {            
+                // Load up all the important information about the reference variant.
+                var refVariantDescription = new StringBuilder (20);
+                refVariantDescription.Append (refCall.RefName);
+                refVariantDescription.Append (':');
+                refVariantDescription.Append (refCall.StartPosition);
+                refVariantDescription.Append (':');
+                if (refCall.Type == VariantType.SNP) {
+                    var snp = refCall as SNPVariant;
+                    refVariantDescription.Append ("S:" + snp.AltBP.ToString());
+                } else if (refCall.Type == VariantType.INDEL) {
+                    var indel = refCall as IndelVariant;
+                    if (indel.InsertionOrDeletion == IndelType.Insertion) {
+                        refVariantDescription.Append ("I" + indel.InsertedOrDeletedBases.Length + ":" + indel.InsertedOrDeletedBases);
+                    } else if (indel.InsertionOrDeletion == IndelType.Deletion) {
+                        refVariantDescription.Append ("D" + indel.InsertedOrDeletedBases.Length + ":" + indel.InsertedOrDeletedBases);
+                    } else {
+                        throw new Exception ("Complex types not allowed");
+                    }
+                } else {
+                    throw new Exception ("Complex variants not allowed");
+                }
+                this.RefVariantDescription = refVariantDescription.ToString ();
+
+                // Now the ever important variant information
+                this.TemplateMutation = queryCall;
+            }
+        }
     } 
 }
 

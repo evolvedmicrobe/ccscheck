@@ -1,7 +1,18 @@
 #include <string>
+namespace PacBio {
+namespace Variant {
+
+
+
 class VariantCaller {
 	public:
-		static void CreateVariantCaller(std::string fastaFile);
-		static void DestroyVariantCaller();
-		static void CallVariants(std::string str);
+		VariantCaller(std::string fastaFile, std::string outputFile);
+		~VariantCaller();
+		static void CallCCSVariants( std::string str);
 };
+
+VariantCaller CreateVariantCaller(std::string fastaFile, std::string outputFile);
+
+
+} // namespace Consensus
+} // namespace PacBio
