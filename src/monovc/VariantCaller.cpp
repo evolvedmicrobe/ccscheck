@@ -1,13 +1,15 @@
+#include <exception>
 #include <iostream>
 #include <stdint.h>
 #include <stdio.h>      /* printf, fopen */
 #include <stdlib.h>
 
-#include "VariantCaller.h"
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/threads.h>
-#include <exception>
+
+#include <pacbio/variant/VariantCaller.h>
+#include "MonoEmbedding.h"
 
 void error(std::string msg) {
 	std::cout << msg << std::endl;
@@ -55,6 +57,9 @@ VariantCaller::VariantCaller(std::string fastaFile, std::string outputFile) {
 	if (mDomain != NULL) {
 		error("Mono domain already created but tried to reinitialize.");
 	}
+
+	::mono_mkbundle_init();
+
 	create_mono_runtime();
 	const char* loc_fasta_str = fastaFile.c_str();
 	const char* loc_output_str = outputFile.c_str();
@@ -108,6 +113,7 @@ VariantCaller::CallCCSVariants(std::string str) {
 // Functions available for PInvoke by C# code.
 extern "C" {
 
+
 	void ScoreVariant(void* ai, int pos, int type, char* bases, double* outputArray) {
 		std::string toMutate(bases);
 
@@ -127,6 +133,8 @@ extern "C" {
 	}
 }
 
+// Only do this if we are not being called as a library, for testing code
+#ifdef PROGRAM
 
 int main() {
 	using namespace PacBio::Variant;
@@ -134,3 +142,4 @@ int main() {
 	vc.CallCCSVariants("TGATGATATTGAACAGGAAGGCTCTCCCGACGTTCCGGGTGACAAGCGTATTGAAGGCTC");
 
 }
+#endif
