@@ -32,8 +32,69 @@ MonoMethod* mSetReferenceFastaAndOutputFile;
 MonoMethod* mCloseFileStream;
 MonoAssembly* mAssembly;
 MonoImage* mImage;
+char revComp(char bases);
+Mutation GetInverseMutation(const Mutation& mut, char mutBase);
 
 MonoArray* InternalGetReadNames(PacBio::Consensus::MonoMolecularIntegrator* ai){
+	std::vector<std::string> readNames = ai->ReadNames();
+	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
+	for (int i=0; i < readNames.size(); i++) {
+		MonoString* name = mono_string_new(mDomain, readNames[i].c_str()); 
+		mono_array_setref(arr, i, name);
+	}
+	return arr;
+}
+
+// Code to test whether applying and unapplying a mutation leads to the expected results.
+MonoString* GetTemplateAfterMutation(PacBio::Consensus::MonoMolecularIntegrator* ai, int pos, int type, char mutBase) {
+	MutationType t = static_cast<MutationType>(type);
+	char base = t != MutationType::DELETION ? mutBase : '-';
+	Mutation m(t, pos, base);
+	ai->ApplyMutation(m);
+	Mutation inverse = GetInverseMutation(m, mutBase);
+	std::string seq = ai->operator std::string();
+	const char* local_str = seq.c_str();
+	ai->ApplyMutation(inverse);
+	return mono_string_new(mDomain, local_str);
+}
+
+char revComp(char bases) {
+	switch (bases) {
+		case 'A':
+		case 'a':
+			return 'T';
+		case 'C':
+		case 'c':
+			return 'G';
+		case 'G':
+		case 'g':
+			return 'C';
+		case 'T':
+		case 't':
+			return 'A';
+		case '-':
+			return '-';
+	}
+	error("it's a crazy base in a crazy world.");
+}
+
+Mutation GetInverseMutation(const Mutation& mut, char mutBase) {
+	MutationType inverseType;
+	char base;
+	if (mut.Type == MutationType::DELETION) {
+		inverseType = MutationType::INSERTION;
+		base = mutBase;
+	} else if (mut.Type == MutationType::INSERTION) {
+		inverseType = MutationType::DELETION;
+		base = '-';
+	} else {
+		inverseType = MutationType::SUBSTITUTION;
+		base = revComp(mutBase);
+	}
+	return Mutation(inverseType, mut.Start(), base);
+}
+
+MonoArray* InternalGetReadDirections(PacBio::Consensus::MonoMolecularIntegrator* ai){
 	std::vector<std::string> readNames = ai->ReadNames();
 	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
 	for (int i=0; i < readNames.size(); i++) {
@@ -59,6 +120,7 @@ void create_mono_runtime() {
 	}
 	mono_jit_exec (mDomain, mAssembly, 1, &filename);
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetReadNames", reinterpret_cast<void*>(InternalGetReadNames));
+	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::GetTemplateAfterMutation", reinterpret_cast<void*>(GetTemplateAfterMutation));
 	
 	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "Aligner");
 	mAlign = mono_class_get_method_from_name(mAligner, "Align", 5);
@@ -145,14 +207,12 @@ VariantCaller::CallCCSVariants(PacBio::Consensus::MonoMolecularIntegrator* ai, s
 // Functions available for PInvoke by C# code.
 extern "C" {
 
-
 	void ScoreVariant(PacBio::Consensus::MonoMolecularIntegrator* ai, int pos, int type, char* bases, double* outputArray) {
 		MutationType t = static_cast<MutationType>(type);
 		char base = t != MutationType::DELETION ? bases[0] : '-';
 		Mutation m(t, pos, base);
 		std::vector<double> scores = ai->LLs(m);
 		std::copy(scores.begin(), scores.end(), outputArray);
-
 	}
 
 	void GetBaseLineLikelihoods(PacBio::Consensus::MonoMolecularIntegrator* ai, double* outputArray) {

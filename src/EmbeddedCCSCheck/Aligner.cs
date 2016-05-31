@@ -18,7 +18,6 @@ namespace EmbeddedCCSCheck
     {
         static StreamWriter SW;
         static BWAPairwiseAligner aligner;
-
         public static void SetReferenceFastaAndOutputFile(string fastaFile, string outFile) {
             aligner = new BWAPairwiseAligner (fastaFile, false, false);
             SW = new StreamWriter (outFile);
@@ -82,12 +81,66 @@ namespace EmbeddedCCSCheck
                         var queryV = variantsInQueryCoordinates [i];
                         var scores = VariantScorer.Score (ai, queryV, nreads);
                         CCSVariantOutputter.OutputVariants(refV, String.Empty, zmw.ToString(), readNames, baseLL, scores, SW);
+
+                        // Test code not currently used.
+#if FALSE
+                        #region TEMPORARY_TEST_CODE
+                        string newTpl = null;
+                        lock(lockobj) {
+                            TestResults.Write("Testing " + queryV.StartPosition );
+                            TestResults.Write("Mutation at End? " + queryV.AtEndOfAlignment);
+                            TestResults.Write("Template Length " + seq.Length);
+                            TestResults.WriteLine();
+                            TestResults.Flush();
+
+
+
+                        if (queryV.Type == VariantType.SNP) {
+                            var snp = queryV as SNPVariant;
+                            newTpl = VariantScorer.SeqAfterMutation (ai, queryV);
+                                TestResults.Write("SNP");
+                        } else {
+                            var indel = queryV as IndelVariant;
+                            if (indel.InsertedOrDeletedBases.Length == 1) {
+                                newTpl = VariantScorer.SeqAfterMutation (ai, queryV);
+                            }                        
+                            TestResults.Write("INDEL");
+                            TestResults.Write(indel.InsertionOrDeletion.ToString());
+                        }
+                        if (newTpl != null) {
+                                
+                            var orgCount = variants.Count;
+                            var mutSeq = new Sequence (DnaAlphabet.Instance, newTpl);
+                            result = aligner.AlignRead (mutSeq) as BWAPairwiseAlignment;
+                            var newVars = VariantCaller.LeftAlignIndelsAndCallVariants(result);
+                            var newCount = newVars.Item2.Count;
+
+                            if (newCount == (orgCount - 1)) {
+                                TestResults.WriteLine ("Successfully tested " + zmw + " " + queryV.ToString());
+                            } else {
+                                TestResults.WriteLine ("Failed on " + zmw + " " + queryV.ToString ());
+                                TestResults.WriteLine("Original");
+                                Print(aln);
+                                TestResults.WriteLine("Mutated");
+                                Print(newVars.Item1);
+                            }
+                        }
+                        }
+                        #endregion
+#endif
                     }
                 } 
             }
          
         }
 
+#if FALSE
+        static void Print(IPairwiseSequenceAlignment psa) {
+            var aln = psa as PairwiseSequenceAlignment;
+            TestResults.WriteLine (aln.PairwiseAlignedSequences [0].FirstSequence.ConvertToString ());
+            TestResults.WriteLine (aln.PairwiseAlignedSequences [0].SecondSequence.ConvertToString ());
+        }
+#endif
         static Tuple<int, int> GetQueryStartAndEndPadding(SAMAlignedSequence seq) {
            
             var cigar = CigarUtils.GetCigarElements (seq.CIGAR);

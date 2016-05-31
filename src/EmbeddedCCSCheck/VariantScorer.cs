@@ -21,11 +21,18 @@ namespace EmbeddedCCSCheck
         };
         
         [DllImport ("__Internal", EntryPoint="ScoreVariant")]
-        extern static void ScoreVariant (IntPtr ai, int pos, MutationType type, string bases, double[] outputArray); 
+        extern static void ScoreVariant (IntPtr ai, int pos, MutationType type, string bases, double[] outputArray);
+
         [DllImport ("__Internal", EntryPoint="GetBaseLineLikelihoods")]
         extern static void GetBaseLineLikelihoods (IntPtr ai, double[] outputArray); 
+
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         extern static string[] InternalGetReadNames(IntPtr ai);
+
+        // Used to verify the application of the mutation removes the variant
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        extern static string GetTemplateAfterMutation(IntPtr ai, int pos, int type, byte mutBase);
+
 
         /// <summary>
         /// Get the baseline log likelihoods for the current template.
@@ -38,6 +45,7 @@ namespace EmbeddedCCSCheck
             GetBaseLineLikelihoods (ai, LL);
             return LL;
         }
+
 
         /// <summary>
         /// Using the abstract integrator pointed to by ai, score the variant
@@ -64,6 +72,26 @@ namespace EmbeddedCCSCheck
             ScoreVariant (ai, pos, type, bases, scores);
             return scores;
         }
+
+// Temporary verification code, to be restructured for testing later.
+#if FALSE
+        public static string SeqAfterMutation(IntPtr ai, Variant vi) {
+            int pos = vi.StartPosition;
+            MutationType type;
+            string bases;
+            if (vi.Type == VariantType.INDEL) {
+                var indel = vi as IndelVariant;
+                pos = pos + 1;
+                type = indel.InsertionOrDeletion == IndelType.Insertion ? MutationType.INSERTION : MutationType.DELETION;
+                bases = indel.InsertedOrDeletedBases;
+            } else {
+                type = MutationType.SUBSTITUTION;
+                var snp = vi as SNPVariant;
+                bases = snp.AltBP.ToString ();
+            }
+            return GetTemplateAfterMutation (ai, pos, (int)type, Convert.ToByte(bases[0]));
+        }
+#endif
 
         public static string[] GetReadNames(IntPtr ai) {
             return InternalGetReadNames (ai);
