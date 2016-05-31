@@ -24,6 +24,8 @@ namespace EmbeddedCCSCheck
         extern static void ScoreVariant (IntPtr ai, int pos, MutationType type, string bases, double[] outputArray); 
         [DllImport ("__Internal", EntryPoint="GetBaseLineLikelihoods")]
         extern static void GetBaseLineLikelihoods (IntPtr ai, double[] outputArray); 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        extern static string[] InternalGetReadNames(IntPtr ai);
 
         /// <summary>
         /// Get the baseline log likelihoods for the current template.
@@ -59,10 +61,13 @@ namespace EmbeddedCCSCheck
                 bases = snp.AltBP.ToString ();
             }
 
-            ScoreVariant (IntPtr.Zero, pos, type, bases, scores);
+            ScoreVariant (ai, pos, type, bases, scores);
             return scores;
         }
 
+        public static string[] GetReadNames(IntPtr ai) {
+            return InternalGetReadNames (ai);
+        }
     }
 }
 

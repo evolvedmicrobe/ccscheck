@@ -2,15 +2,10 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
 using System.Linq;
 
 using Bio;
-using Bio.IO;
-using Bio.IO.PacBio;
 using Bio.Variant;
-using Bio.BWA.MEM;
 using Bio.BWA;
 using Bio.Extensions;
 using Bio.IO.SAM;
@@ -38,7 +33,6 @@ namespace EmbeddedCCSCheck
 
         public static void Align (string seq, IntPtr ai, string movie, long zmw, int nreads)
         {
-            try {
             if (SW == null || aligner == null) {
                 throw new InvalidProgramException ("Tried to align read before calling variants");
             }
@@ -80,23 +74,19 @@ namespace EmbeddedCCSCheck
                     }
 
                     double[] baseLL = VariantScorer.GetBaselineLL (ai, nreads);
-
+                    string[] readNames = VariantScorer.GetReadNames (ai).Select(s => s.Split('/').Last()).ToArray();
                     // Now to pair them up
 
                     for(int i = 0; i < variants.Count; i++) {
                         var refV = variants [i];
                         var queryV = variantsInQueryCoordinates [i];
                         var scores = VariantScorer.Score (ai, queryV, nreads);
-                        CCSVariantOutputter.OutputVariants(refV, movie, zmw.ToString(), baseLL, scores, SW);
+                        CCSVariantOutputter.OutputVariants(refV, String.Empty, zmw.ToString(), readNames, baseLL, scores, SW);
                     }
                 } 
             }
-            } catch(Exception thrown) {
-                Console.Write (thrown.StackTrace);
-            }
+         
         }
-
-
 
         static Tuple<int, int> GetQueryStartAndEndPadding(SAMAlignedSequence seq) {
            
