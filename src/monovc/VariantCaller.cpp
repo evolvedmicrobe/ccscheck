@@ -37,6 +37,7 @@ MonoImage* mImage;
 char revComp(char bases);
 Mutation GetInverseMutation(const Mutation& mut, char mutBase);
 
+/* Functions to expose as internal mono calls. */
 MonoArray* InternalGetReadNames(PacBio::Consensus::MonoMolecularIntegrator* ai){
 	std::vector<std::string> readNames = ai->ReadNames();
 	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
@@ -45,6 +46,20 @@ MonoArray* InternalGetReadNames(PacBio::Consensus::MonoMolecularIntegrator* ai){
 		mono_array_setref(arr, i, name);
 	}
 	return arr;
+}
+
+MonoArray* InternalGetReadDirections(PacBio::Consensus::MonoMolecularIntegrator* ai){
+	std::vector<std::string> direcs = ai->ReadDirections();
+	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), direcs.size());
+	for (int i=0; i < direcs.size(); i++) {
+		MonoString* name = mono_string_new(mDomain, direcs[i].c_str()); 
+		mono_array_setref(arr, i, name);
+	}
+	return arr;
+}
+
+int InternalGetEvaluatorCount(PacBio::Consensus::MonoMolecularIntegrator* ai) {
+	return ai->NumEvaluators();
 }
 
 // Code to test whether applying and unapplying a mutation leads to the expected results.
@@ -96,15 +111,7 @@ Mutation GetInverseMutation(const Mutation& mut, char mutBase) {
 	return Mutation(inverseType, mut.Start(), base);
 }
 
-MonoArray* InternalGetReadDirections(PacBio::Consensus::MonoMolecularIntegrator* ai){
-	std::vector<std::string> readNames = ai->ReadNames();
-	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
-	for (int i=0; i < readNames.size(); i++) {
-		MonoString* name = mono_string_new(mDomain, readNames[i].c_str()); 
-		mono_array_setref(arr, i, name);
-	}
-	return arr;
-}
+
 
 void create_mono_runtime() {
 	char toConvert[] = "EmbeddedCCSCheck.exe";
@@ -123,9 +130,12 @@ void create_mono_runtime() {
 	mono_jit_exec (mDomain, mAssembly, 1, &filename);
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetReadNames", reinterpret_cast<void*>(InternalGetReadNames));
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::GetTemplateAfterMutation", reinterpret_cast<void*>(GetTemplateAfterMutation));
+	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetEvaluatorCount", reinterpret_cast<void*>(InternalGetEvaluatorCount));
+	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetReadDirections", reinterpret_cast<void*>(InternalGetReadDirections));
 	
+
 	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "VariantOutputter");
-	mAlign = mono_class_get_method_from_name(mAligner, "AlignAndCallVariants", 5);
+	mAlign = mono_class_get_method_from_name(mAligner, "AlignAndCallVariants", 4);
 	mCloseFileStream = mono_class_get_method_from_name(mAligner, "CloseFileStream", 0);	
 	mSetReferenceFastaAndOutputFile = mono_class_get_method_from_name(mAligner, "SetReferenceFastaAndOutputFile", 2);
 	
@@ -181,7 +191,7 @@ void
 VariantCaller::CallCCSVariants(PacBio::Consensus::MonoMolecularIntegrator* ai, std::string movieName, long zmw) {
 	// Very unclear about this business
 	mono_thread_attach (mDomain);
-	void* args[5];
+	void* args[4];
 	MonoObject* exception;
 	// TODO: Need to fix this copy operation
 	//std::string seq = GetSequenceFromAI(ai);
@@ -189,13 +199,11 @@ VariantCaller::CallCCSVariants(PacBio::Consensus::MonoMolecularIntegrator* ai, s
 	const char* local_str = seq.c_str();
 	const char* movie_str = movieName.c_str();
 	long ZMW = zmw;
-	int scorable = static_cast<int>(ai->LLs().size());
 
 	args[0] = mono_string_new(mDomain, local_str); // Sequence
 	args[1] = &ai; // Pointer to abstract integrator
 	args[2] = mono_string_new(mDomain, movie_str); // Movie Name
 	args[3] = &ZMW; // ZMW
-	args[4] = &scorable; // NumReads = both scorable and not.
 	mono_runtime_invoke(mAlign, NULL, args, &exception);
 	if(exception){
 		mono_print_unhandled_exception (exception);
@@ -221,6 +229,12 @@ extern "C" {
 		std::vector<double> scores = ai->LLs();
 		std::copy(scores.begin(), scores.end(), outputArray);
 	}
+
+	void GetBaseLineZScores(PacBio::Consensus::MonoMolecularIntegrator* ai, double* outputArray) {
+		std::vector<double> zscores = ai->ZScores();
+		std::copy(zscores.begin(), zscores.end(), outputArray);
+	}
+
 }
 
 // Only do this if we are not being called as a library, for testing code

@@ -30,7 +30,7 @@ namespace EmbeddedCCSCheck
         }
 
 
-        public static void AlignAndCallVariants (string seq, IntPtr ai, string movie, long zmw, int nreads)
+        public static void AlignAndCallVariants (string seq, IntPtr ai, string movie, long zmw)
         {
             if (SW == null || aligner == null) {
                 throw new InvalidProgramException ("Tried to align read before calling variants");
@@ -40,6 +40,7 @@ namespace EmbeddedCCSCheck
             if (result == null) {
                 return;
             } else {
+                VariantScorer vs = new VariantScorer (ai);
                 var alnv = VariantCaller.LeftAlignIndelsAndCallVariants(result);
                 var variants = alnv.Item2;
                 var aln = alnv.Item1;
@@ -47,6 +48,7 @@ namespace EmbeddedCCSCheck
                 // Super annoying, I need to get back the query positions of this stuff 
                 // to test everything, which is information I specifically discarded before
                 if (variants.Count > 0) {
+                    
                     // TODO: Super lazy here, we'll get the variants in query coordinates by flipping,
                     // and recalling everything, this is a very inefficient operation.
                     var pairwise = new PairwiseSequenceAlignment ();
@@ -72,15 +74,18 @@ namespace EmbeddedCCSCheck
                         throw new Exception ("Variants in one direction did not match variants in the other");
                     }
 
-                    double[] baseLL = VariantScorer.GetBaselineLL (ai, nreads);
-                    string[] readNames = VariantScorer.GetReadNames (ai).Select(s => s.Split('/').Last()).ToArray();
+                    double[] baseLL = vs.GetBaselineLL ();
+                    string[] readNames = vs.GetReadNames ().Select(s => s.Split('/').Last()).ToArray();
+                    double [] zScores = vs.GetZScores ();
+                    string[] directions = vs.GetReadDirections ();
                     // Now to pair them up
 
                     for(int i = 0; i < variants.Count; i++) {
                         var refV = variants [i];
                         var queryV = variantsInQueryCoordinates [i];
-                        var scores = VariantScorer.Score (ai, queryV, nreads);
-                        CCSVariantOutputter.OutputVariants(refV, String.Empty, zmw.ToString(), readNames, baseLL, scores, SW);
+                        var scores = vs.Score (queryV);
+                        CCSVariantOutputter.OutputVariants(refV, String.Empty, zmw.ToString(), readNames,
+                                                           directions, zScores, baseLL, scores, SW);
 
                         // Test code not currently used.
 #if FALSE
