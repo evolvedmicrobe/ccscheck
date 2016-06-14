@@ -32,6 +32,8 @@ MonoMethod* mSetReferenceFastaAndOutputFile;
 MonoMethod* mCloseFileStream;
 MonoAssembly* mAssembly;
 MonoImage* mImage;
+
+// Pre-declare methods
 char revComp(char bases);
 Mutation GetInverseMutation(const Mutation& mut, char mutBase);
 
@@ -122,8 +124,8 @@ void create_mono_runtime() {
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetReadNames", reinterpret_cast<void*>(InternalGetReadNames));
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::GetTemplateAfterMutation", reinterpret_cast<void*>(GetTemplateAfterMutation));
 	
-	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "Aligner");
-	mAlign = mono_class_get_method_from_name(mAligner, "Align", 5);
+	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "VariantOutputter");
+	mAlign = mono_class_get_method_from_name(mAligner, "AlignAndCallVariants", 5);
 	mCloseFileStream = mono_class_get_method_from_name(mAligner, "CloseFileStream", 0);	
 	mSetReferenceFastaAndOutputFile = mono_class_get_method_from_name(mAligner, "SetReferenceFastaAndOutputFile", 2);
 	

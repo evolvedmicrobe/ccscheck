@@ -14,7 +14,7 @@ using Bio.Algorithms.Alignment;
 namespace EmbeddedCCSCheck
 {
 
-    public static class Aligner
+    public static class VariantOutputter
     {
         static StreamWriter SW;
         static BWAPairwiseAligner aligner;
@@ -30,7 +30,7 @@ namespace EmbeddedCCSCheck
         }
 
 
-        public static void Align (string seq, IntPtr ai, string movie, long zmw, int nreads)
+        public static void AlignAndCallVariants (string seq, IntPtr ai, string movie, long zmw, int nreads)
         {
             if (SW == null || aligner == null) {
                 throw new InvalidProgramException ("Tried to align read before calling variants");
