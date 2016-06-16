@@ -93,6 +93,7 @@ char revComp(char bases) {
 			return '-';
 	}
 	error("it's a crazy base in a crazy world.");
+	return 'F';
 }
 
 Mutation GetInverseMutation(const Mutation& mut, char mutBase) {
@@ -216,19 +217,49 @@ VariantCaller::CallCCSVariants(PacBio::Consensus::MonoMolecularIntegrator* ai, s
 
 // Functions available for PInvoke by C# code.
 extern "C" {
-
-	void ScoreVariant(PacBio::Consensus::MonoMolecularIntegrator* ai, int pos, int type, char* bases, double* outputArray) {
-		MutationType t = static_cast<MutationType>(type);
-		char base = t != MutationType::DELETION ? bases[0] : '-';
-		Mutation m(t, pos, base);
-		std::vector<double> scores = ai->LLs(m);
-		std::copy(scores.begin(), scores.end(), outputArray);
-	}
-
+	
 	void GetBaseLineLikelihoods(PacBio::Consensus::MonoMolecularIntegrator* ai, double* outputArray) {
 		std::vector<double> scores = ai->LLs();
 		std::copy(scores.begin(), scores.end(), outputArray);
 	}
+
+	bool ScoreVariant(PacBio::Consensus::MonoMolecularIntegrator* ai, int pos, int type, char* bases, double* outputArray) {
+		bool worked = true;
+		try {
+			std::string sbases(bases);
+			MutationType t = static_cast<MutationType>(type); 
+			// If we have only one edit, we will test and not apply the mutation
+			if (sbases.size() == 1) {
+				//char base = t != MutationType::DELETION ? bases[0] : '-';
+				char base = bases[0];
+				Mutation m(t, pos, base);
+				std::vector<double> scores = ai->LLs(m);
+				std::copy(scores.begin(), scores.end(), outputArray);
+			} else {
+				// We have to apply a series of mulitple mutations to test the likelihood.
+				// Note: The mutations are applied in "REVERSE order"
+				std::vector<Mutation> rev_muts(sbases.size(), Mutation(t, 0, '-'));
+				std::transform(sbases.rbegin(), sbases.rend(), rev_muts.begin(), 
+					[t, pos](unsigned char bp) { return Mutation(t, static_cast<size_t>(pos), bp);});
+
+				// Let's get those scores
+				ai->ApplyMutations(&rev_muts);
+				GetBaseLineLikelihoods(ai, outputArray);
+
+				// Now to get the inverse mutations
+				std::vector<Mutation> inverse_muts(rev_muts.size(), Mutation(t, 0, '-'));
+				std::transform(rev_muts.begin(), rev_muts.end(), inverse_muts.begin(), 
+					[](const Mutation mut) { return GetInverseMutation(mut, mut.Base);});
+				// And apply them to undo the damage
+				ai->ApplyMutations(&inverse_muts);
+			}
+		} catch(...) {
+				worked = false;
+		}
+		return worked;
+	}
+
+
 
 	void GetBaseLineZScores(PacBio::Consensus::MonoMolecularIntegrator* ai, double* outputArray) {
 		std::vector<double> zscores = ai->ZScores();

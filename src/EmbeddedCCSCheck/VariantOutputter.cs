@@ -83,10 +83,16 @@ namespace EmbeddedCCSCheck
                     for(int i = 0; i < variants.Count; i++) {
                         var refV = variants [i];
                         var queryV = variantsInQueryCoordinates [i];
-                        var scores = vs.Score (queryV);
-                        CCSVariantOutputter.OutputVariants(refV, String.Empty, zmw.ToString(), readNames,
-                                                           directions, zScores, baseLL, scores, SW);
-
+                        try {
+                            var scores = vs.Score (queryV);
+                            CCSVariantOutputter.OutputVariants (refV, String.Empty, zmw.ToString (), readNames,
+                                                               directions, zScores, baseLL, scores, SW);
+                        } catch (Exception thrown) {
+                            //TODO: This needs to be handled much more carefully, nothing should be output if
+                            // any variant fails.
+                            Console.WriteLine (thrown.Message);
+                            Console.WriteLine ("Aborting variant calls");
+                        }
                         // Test code not currently used.
 #if FALSE
                         #region TEMPORARY_TEST_CODE
