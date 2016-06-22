@@ -38,9 +38,9 @@ char revComp(char bases);
 Mutation GetInverseMutation(const Mutation& mut, char mutBase);
 
 /* Functions to expose as internal mono calls. */
-MonoArray* InternalGetReadNames(PacBio::Consensus::MonoMolecularIntegrator* ai){
+MonoArray* InternalGetReadNames(PacBio::Consensus::AbstractIntegrator* ai){
 	std::vector<std::string> readNames = ai->ReadNames();
-	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
+	MonoArray* arr = (MonoArray*) mono_array_new (mDomain,  mono_get_string_class (), readNames.size());
 	for (int i=0; i < readNames.size(); i++) {
 		MonoString* name = mono_string_new(mDomain, readNames[i].c_str()); 
 		mono_array_setref(arr, i, name);
@@ -48,7 +48,7 @@ MonoArray* InternalGetReadNames(PacBio::Consensus::MonoMolecularIntegrator* ai){
 	return arr;
 }
 
-MonoArray* InternalGetReadDirections(PacBio::Consensus::MonoMolecularIntegrator* ai){
+MonoArray* InternalGetReadDirections(PacBio::Consensus::AbstractIntegrator* ai){
 	std::vector<std::string> direcs = ai->ReadDirections();
 	MonoArray* arr = (MonoArray*)mono_array_new (mDomain,  mono_get_string_class (), direcs.size());
 	for (int i=0; i < direcs.size(); i++) {
@@ -58,12 +58,12 @@ MonoArray* InternalGetReadDirections(PacBio::Consensus::MonoMolecularIntegrator*
 	return arr;
 }
 
-int InternalGetEvaluatorCount(PacBio::Consensus::MonoMolecularIntegrator* ai) {
+int InternalGetEvaluatorCount(PacBio::Consensus::AbstractIntegrator* ai) {
 	return ai->NumEvaluators();
 }
 
 // Code to test whether applying and unapplying a mutation leads to the expected results.
-MonoString* GetTemplateAfterMutation(PacBio::Consensus::MonoMolecularIntegrator* ai, int pos, int type, char mutBase) {
+MonoString* GetTemplateAfterMutation(PacBio::Consensus::AbstractIntegrator* ai, int pos, int type, char mutBase) {
 	MutationType t = static_cast<MutationType>(type);
 	char base = t != MutationType::DELETION ? mutBase : '-';
 	Mutation m(t, pos, base);
@@ -133,7 +133,6 @@ void create_mono_runtime() {
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::GetTemplateAfterMutation", reinterpret_cast<void*>(GetTemplateAfterMutation));
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetEvaluatorCount", reinterpret_cast<void*>(InternalGetEvaluatorCount));
 	mono_add_internal_call("EmbeddedCCSCheck.VariantScorer::InternalGetReadDirections", reinterpret_cast<void*>(InternalGetReadDirections));
-	
 
 	mAligner = mono_class_from_name( mImage, "EmbeddedCCSCheck", "VariantOutputter");
 	mAlign = mono_class_get_method_from_name(mAligner, "AlignAndCallVariants", 4);
@@ -261,7 +260,7 @@ extern "C" {
 
 
 
-	void GetBaseLineZScores(PacBio::Consensus::MonoMolecularIntegrator* ai, double* outputArray) {
+	void GetBaseLineZScores(PacBio::Consensus::AbstractIntegrator* ai, double* outputArray) {
 		std::vector<double> zscores = ai->ZScores();
 		std::copy(zscores.begin(), zscores.end(), outputArray);
 	}
