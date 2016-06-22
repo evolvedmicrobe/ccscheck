@@ -46,12 +46,14 @@ namespace EmbeddedCCSCheck
                 bases = snp.AltBP.ToString ();
             }
 
-            ScoreVariant (abstractIntegrator, pos, type, bases, scores);
+            bool noError = ScoreVariant (abstractIntegrator, pos, type, bases, scores);
+            if (!noError) {
+                throw new Exception ("Failed to test mutation - Exception in C++");
+            }
             return scores;
         }
         [DllImport ("__Internal", EntryPoint="ScoreVariant")]
-        extern static void ScoreVariant (IntPtr ai, int pos, MutationType type, string bases, double[] outputArray);
-
+        extern static bool ScoreVariant (IntPtr ai, int pos, MutationType type, string bases, double[] outputArray);
 
         /// <summary>
         /// Get the baseline log likelihoods for the current template.
@@ -97,8 +99,6 @@ namespace EmbeddedCCSCheck
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         extern static string GetTemplateAfterMutation(IntPtr ai, int pos, int type, byte mutBase);
 
-
-
         [MethodImplAttribute (MethodImplOptions.InternalCall)]
         extern static int InternalGetEvaluatorCount (IntPtr ai);
 
@@ -112,13 +112,6 @@ namespace EmbeddedCCSCheck
             abstractIntegrator = ai;
             numEvaluators = InternalGetEvaluatorCount (abstractIntegrator);
         }
-
-
-
-
-
-
-
         /// <summary>
 
 
@@ -141,8 +134,6 @@ namespace EmbeddedCCSCheck
             return GetTemplateAfterMutation (ai, pos, (int)type, Convert.ToByte(bases[0]));
         }
 #endif
-
-
     }
 }
 
